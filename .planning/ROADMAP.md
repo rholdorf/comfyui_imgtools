@@ -7,7 +7,7 @@
 
 - [x] Create `__init__.py` with node registration
 - [x] Create main node file structure
-- [ ] Test node appears in ComfyUI (pending user verification)
+- [x] Test node appears in ComfyUI
 
 **Plans:** 1 | **Status:** completed
 
