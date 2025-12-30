@@ -45,6 +45,31 @@ MODEL_DIMENSIONS = {
 }
 
 
+def center_crop(image, target_w: int, target_h: int):
+    """Center crop an image tensor to target dimensions.
+
+    Args:
+        image: Tensor of shape [batch, height, width, channels]
+        target_w: Target width
+        target_h: Target height
+
+    Returns:
+        Cropped tensor of shape [batch, target_h, target_w, channels]
+    """
+    _, h, w, _ = image.shape
+
+    # If image is smaller than target in either dimension, return as-is
+    if w < target_w or h < target_h:
+        return image
+
+    # Calculate crop offsets to center the crop region
+    x_offset = (w - target_w) // 2
+    y_offset = (h - target_h) // 2
+
+    # Crop: [batch, y:y+h, x:x+w, channels]
+    return image[:, y_offset:y_offset + target_h, x_offset:x_offset + target_w, :]
+
+
 def find_closest_dimensions(width: int, height: int, model: str) -> tuple[int, int]:
     """Find the closest standard dimensions for the given model based on aspect ratio."""
     dimensions = MODEL_DIMENSIONS[model]
@@ -83,6 +108,7 @@ class ImageDimensionFitter:
         _, h, w, _ = image.shape
         target_w, target_h = find_closest_dimensions(w, h, model)
 
-        # For now, just return input image and target dimensions
-        # Actual cropping will be implemented in Phase 3
-        return (image, target_w, target_h)
+        # Center crop to target dimensions (handles batch automatically)
+        cropped = center_crop(image, target_w, target_h)
+
+        return (cropped, target_w, target_h)

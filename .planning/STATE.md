@@ -2,7 +2,7 @@
 
 ## Current Position
 - **Milestone:** v1.0 - Image Dimension Fitter
-- **Phase:** 3 - Crop Logic
+- **Phase:** 4 - Testing & Polish
 - **Status:** not_started
 
 ## Phase Progress
@@ -11,10 +11,16 @@
 |-------|------|--------|
 | 1 | Project Setup | completed |
 | 2 | Core Node Implementation | completed |
-| 3 | Crop Logic | not_started |
+| 3 | Crop Logic | completed |
 | 4 | Testing & Polish | not_started |
 
 ## Session Log
+
+### 2025-12-30 - Phase 3 Completed
+- Implemented `center_crop()` function with centered offset calculation
+- Edge case: returns unchanged image if smaller than target
+- Batch processing supported via tensor slicing
+- Updated `fit_dimensions()` to apply cropping
 
 ### 2025-12-30 - Phase 2 Completed
 - Defined dimension tables for SD, Flux, and Z-Turbo models
