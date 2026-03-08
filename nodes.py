@@ -88,6 +88,55 @@ def find_closest_dimensions(width: int, height: int, model: str) -> tuple[int, i
     return best_match
 
 
+class ImagePaddingCalculator:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "target_width": ("INT", {"default": 1024, "min": 1}),
+                "target_height": ("INT", {"default": 1024, "min": 1}),
+            }
+        }
+
+    RETURN_TYPES = ("INT", "INT", "INT", "INT")
+    RETURN_NAMES = ("left", "top", "right", "bottom")
+    FUNCTION = "calculate_padding"
+    CATEGORY = "image/transform"
+
+    def calculate_padding(self, image, target_width, target_height):
+        _, h, w, _ = image.shape
+        pad_x = max(target_width - w, 0)
+        pad_y = max(target_height - h, 0)
+        left = pad_x // 2
+        right = pad_x - left
+        top = pad_y // 2
+        bottom = pad_y - top
+        return (left, top, right, bottom)
+
+
+class PathSplitter:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "path": ("STRING", {"default": ""}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_NAMES = ("directory", "filename", "stem")
+    FUNCTION = "split_path"
+    CATEGORY = "utils"
+
+    def split_path(self, path):
+        import os
+        directory = os.path.dirname(path)
+        filename = os.path.basename(path)
+        stem = os.path.splitext(filename)[0]
+        return (directory, filename, stem)
+
+
 class ImageDimensionFitter:
     @classmethod
     def INPUT_TYPES(cls):
