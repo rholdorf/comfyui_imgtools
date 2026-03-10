@@ -58,10 +58,11 @@ Plans:
   2. Strength slider (0.0-1.0) visibly controls morph intensity -- 0.0 produces no change, 1.0 produces full shape match
   3. Interior facial features (eyes, nose, mouth) remain undistorted after morphing
   4. Node outputs morphed face image and warp mask for downstream use
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — FaceCropAlign landmark output update + morph utilities with TDD
+- [ ] 03-02-PLAN.md — FaceShapeMorph node implementation and registration
 
 ### Phase 4: Compositing and Integration
 **Goal**: Users can run the full face shape matching pipeline end-to-end, producing a natural-looking composited result ready for face swap
@@ -86,5 +87,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Environment and Detection | 2/2 | Complete   | 2026-03-10 |
 | 2. Face Crop and Alignment | 2/2 | Complete   | 2026-03-10 |
-| 3. Face Shape Morphing | 0/? | Not started | - |
+| 3. Face Shape Morphing | 0/2 | Not started | - |
 | 4. Compositing and Integration | 0/? | Not started | - |
