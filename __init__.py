@@ -2,6 +2,7 @@ from .nodes import ImageDimensionFitter, ImagePaddingCalculator, PathSplitter
 
 try:
     from .face_detection import FaceDetect
+    from .face_crop import FaceCropAlign
     _face_nodes_available = True
 except ImportError as e:
     print(f"[ImgTools] Warning: Face detection nodes unavailable. {e}")
@@ -23,5 +24,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 if _face_nodes_available:
     NODE_CLASS_MAPPINGS["FaceDetect"] = FaceDetect
     NODE_DISPLAY_NAME_MAPPINGS["FaceDetect"] = "ImgTools Face Detect"
+    NODE_CLASS_MAPPINGS["FaceCropAlign"] = FaceCropAlign
+    NODE_DISPLAY_NAME_MAPPINGS["FaceCropAlign"] = "ImgTools Face Crop Align"
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
