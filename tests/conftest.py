@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import torch
+from skimage.transform import AffineTransform
 
 
 @pytest.fixture
@@ -132,6 +133,68 @@ def mock_landmarks_tilted():
             "landmarks_3d": np.zeros((478, 3), dtype=np.float64),
         }
     ]
+
+
+@pytest.fixture
+def identity_align_data():
+    """align_data with identity transform, crop_box (10,10,74,74), original_size (100,100)."""
+    transform = AffineTransform()  # identity
+    return {
+        "rotation_angle": 0.0,
+        "rotation_center": (50.0, 50.0),
+        "crop_box": (10, 10, 74, 74),
+        "original_size": (100, 100),
+        "transform_matrix": transform.params.copy(),
+    }
+
+
+@pytest.fixture
+def rotated_align_data():
+    """align_data with 15-degree rotation transform around center (50,50)."""
+    angle = np.deg2rad(15)
+    cx, cy = 50.0, 50.0
+    tform_to_origin = AffineTransform(translation=(-cx, -cy))
+    tform_rotate = AffineTransform(rotation=-angle)
+    tform_back = AffineTransform(translation=(cx, cy))
+    full_transform = tform_back + tform_rotate + tform_to_origin
+    return {
+        "rotation_angle": float(angle),
+        "rotation_center": (cx, cy),
+        "crop_box": (10, 10, 74, 74),
+        "original_size": (100, 100),
+        "transform_matrix": full_transform.params.copy(),
+    }
+
+
+@pytest.fixture
+def synthetic_original():
+    """[1, 100, 100, 3] tensor with a distinct checkerboard-like pattern."""
+    img = np.zeros((100, 100, 3), dtype=np.float32)
+    # Create a gradient pattern for easy visual/numerical verification
+    for c in range(3):
+        img[:, :, c] = np.linspace(0, 1, 100).reshape(1, 100) * (c + 1) / 3
+    return torch.from_numpy(img).unsqueeze(0)
+
+
+@pytest.fixture
+def synthetic_morphed_face():
+    """Solid-color [1, 64, 64, 3] tensor matching crop_box size (74-10=64)."""
+    face = np.full((64, 64, 3), 0.8, dtype=np.float32)
+    return torch.from_numpy(face).unsqueeze(0)
+
+
+@pytest.fixture
+def synthetic_warp_mask():
+    """Feathered [1, 64, 64] mask: ones in center, gaussian fade to edges."""
+    mask = np.ones((64, 64), dtype=np.float32)
+    # Apply a simple feathered border (5px fade)
+    for i in range(5):
+        val = (i + 1) / 5.0
+        mask[i, :] = val
+        mask[-(i + 1), :] = val
+        mask[:, i] = np.minimum(mask[:, i], val)
+        mask[:, -(i + 1)] = np.minimum(mask[:, -(i + 1)], val)
+    return torch.from_numpy(mask).unsqueeze(0)
 
 
 @pytest.fixture
