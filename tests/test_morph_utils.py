@@ -120,3 +120,128 @@ class TestBoundaryAnchors:
 
         anchors = _get_boundary_anchors(512, 256)
         assert anchors.shape == (12, 2)
+
+
+class TestMorphWarp:
+    """Test compute_morph_warp TPS pipeline."""
+
+    @pytest.fixture
+    def deterministic_landmarks_pair(self):
+        """Create a pair of source/target 478-point landmarks for warp tests."""
+        from tests.conftest import _make_deterministic_landmarks
+
+        source = _make_deterministic_landmarks(128.0, 128.0, spread=30.0)
+        # Target has slightly different proportions (wider jaw)
+        target = _make_deterministic_landmarks(128.0, 128.0, spread=35.0)
+        return source, target
+
+    def test_identity_warp(self, deterministic_landmarks_pair):
+        """Identical source/target produces identity-like TPS transform."""
+        from comfyui_imgtools.utils.morph_utils import compute_morph_warp, MORPH_CONTROL_INDICES
+
+        source, _ = deterministic_landmarks_pair
+        tps = compute_morph_warp(source, source, strength=1.0, img_shape=(256, 256))
+
+        assert tps is not None
+        # Applying the TPS to source control points should return ~same points
+        src_pts = source[MORPH_CONTROL_INDICES]
+        mapped = tps(src_pts)
+        np.testing.assert_allclose(mapped, src_pts, atol=1.0)
+
+    def test_different_landmarks_produces_movement(self, deterministic_landmarks_pair):
+        """Different source/target with strength=1.0 moves source points toward target."""
+        from comfyui_imgtools.utils.morph_utils import compute_morph_warp, MORPH_CONTROL_INDICES
+
+        source, target = deterministic_landmarks_pair
+        tps = compute_morph_warp(source, target, strength=1.0, img_shape=(256, 256))
+
+        assert tps is not None
+        src_pts = source[MORPH_CONTROL_INDICES]
+        mapped = tps(src_pts)
+        # Mapped points should differ from source
+        diff = np.linalg.norm(mapped - src_pts, axis=1)
+        assert diff.max() > 0.5, "TPS should move at least some points"
+
+    def test_strength_zero_near_identity(self, deterministic_landmarks_pair):
+        """Strength 0.0 should produce near-identity transform."""
+        from comfyui_imgtools.utils.morph_utils import compute_morph_warp, MORPH_CONTROL_INDICES
+
+        source, target = deterministic_landmarks_pair
+        tps = compute_morph_warp(source, target, strength=0.0, img_shape=(256, 256))
+
+        assert tps is not None
+        src_pts = source[MORPH_CONTROL_INDICES]
+        mapped = tps(src_pts)
+        np.testing.assert_allclose(mapped, src_pts, atol=1.0)
+
+    def test_strength_one_full_movement(self, deterministic_landmarks_pair):
+        """Strength 1.0 moves source control points fully toward target positions."""
+        from comfyui_imgtools.utils.morph_utils import compute_morph_warp, MORPH_CONTROL_INDICES
+
+        source, target = deterministic_landmarks_pair
+        tps = compute_morph_warp(source, target, strength=1.0, img_shape=(256, 256))
+
+        assert tps is not None
+
+    def test_strength_half_intermediate(self, deterministic_landmarks_pair):
+        """Strength 0.5 produces intermediate movement between 0 and 1."""
+        from comfyui_imgtools.utils.morph_utils import compute_morph_warp, MORPH_CONTROL_INDICES
+
+        source, target = deterministic_landmarks_pair
+        tps_half = compute_morph_warp(source, target, strength=0.5, img_shape=(256, 256))
+        tps_full = compute_morph_warp(source, target, strength=1.0, img_shape=(256, 256))
+
+        assert tps_half is not None
+        assert tps_full is not None
+
+        src_pts = source[MORPH_CONTROL_INDICES]
+        mapped_half = tps_half(src_pts)
+        mapped_full = tps_full(src_pts)
+
+        # Half-strength movement should be less than full-strength
+        diff_half = np.linalg.norm(mapped_half - src_pts, axis=1).mean()
+        diff_full = np.linalg.norm(mapped_full - src_pts, axis=1).mean()
+        assert diff_half < diff_full * 0.8, "Half strength should produce less movement"
+
+
+class TestFeatheredMask:
+    """Test generate_feathered_mask soft-edged mask generation."""
+
+    @pytest.fixture
+    def face_landmarks(self):
+        """Create landmarks for mask generation centered in a 256x256 image."""
+        from tests.conftest import _make_deterministic_landmarks
+
+        return _make_deterministic_landmarks(128.0, 128.0, spread=40.0)
+
+    def test_feathered_mask_shape_and_dtype(self, face_landmarks):
+        from comfyui_imgtools.utils.morph_utils import generate_feathered_mask
+
+        mask = generate_feathered_mask(face_landmarks, 256, 256)
+        assert mask.shape == (256, 256)
+        assert mask.dtype == np.float32
+
+    def test_feathered_mask_value_range(self, face_landmarks):
+        from comfyui_imgtools.utils.morph_utils import generate_feathered_mask
+
+        mask = generate_feathered_mask(face_landmarks, 256, 256)
+        assert mask.min() >= 0.0
+        assert mask.max() <= 1.0
+
+    def test_feathered_mask_has_soft_edges(self, face_landmarks):
+        """Mask should have intermediate values (not all 0/1) from Gaussian blur."""
+        from comfyui_imgtools.utils.morph_utils import generate_feathered_mask
+
+        mask = generate_feathered_mask(face_landmarks, 256, 256)
+        # Find values between 0.05 and 0.95 (soft edge region)
+        intermediate = ((mask > 0.05) & (mask < 0.95)).sum()
+        assert intermediate > 0, "Feathered mask should have intermediate values"
+
+    def test_feathered_mask_center_near_one(self, face_landmarks):
+        """Center region (inside face oval) should be close to 1.0."""
+        from comfyui_imgtools.utils.morph_utils import generate_feathered_mask
+
+        mask = generate_feathered_mask(face_landmarks, 256, 256)
+        # The face center at (128, 128) should have high mask value
+        center_val = mask[128, 128]
+        assert center_val > 0.8, f"Center mask value {center_val} should be near 1.0"
