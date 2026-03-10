@@ -32,8 +32,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Platform
 
-- [ ] **PLAT-01**: All nodes run on macOS with Apple Silicon (no CUDA-only dependencies)
-- [ ] **PLAT-02**: Dependencies limited to MediaPipe + scikit-image (+ existing ComfyUI deps)
+- [x] **PLAT-01**: All nodes run on macOS with Apple Silicon (no CUDA-only dependencies)
+- [x] **PLAT-02**: Dependencies limited to MediaPipe + scikit-image (+ existing ComfyUI deps)
 - [ ] **PLAT-03**: Nodes follow ComfyUI conventions (INPUT_TYPES, RETURN_TYPES, IMAGE tensors)
 
 ## v2 Requirements
@@ -78,8 +78,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-02 | Phase 4 | Pending |
 | COMP-03 | Phase 4 | Pending |
 | COMP-04 | Phase 4 | Pending |
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Pending |
 
 **Coverage:**
