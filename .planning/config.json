@@ -1,5 +1,13 @@
 {
   "mode": "yolo",
-  "project": "comfyui-imgtools",
-  "created": "2025-12-30"
+  "granularity": "standard",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "quality",
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true,
+    "nyquist_validation": true
+  }
 }
