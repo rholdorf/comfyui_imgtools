@@ -13,7 +13,7 @@ This roadmap delivers a three-node face morphing pipeline (FaceCropAlign, FaceSh
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Environment and Detection** - Verify Python/MediaPipe compatibility, implement face landmark detection core (completed 2026-03-10)
-- [ ] **Phase 2: Face Crop and Alignment** - Build FaceCropAlign node with rotation handling, padding, and multi-face selection
+- [x] **Phase 2: Face Crop and Alignment** - Build FaceCropAlign node with rotation handling, padding, and multi-face selection (completed 2026-03-10)
 - [ ] **Phase 3: Face Shape Morphing** - Build FaceShapeMorph node with TPS warping and strength control
 - [ ] **Phase 4: Compositing and Integration** - Build FaceComposite node with feathered blending and end-to-end pipeline validation
 
@@ -43,7 +43,7 @@ Plans:
   2. Tilted or rotated faces are aligned to upright orientation based on eye positions
   3. User can select which face to process by index when multiple faces are present
   4. Node outputs cropped face image, alignment transform data, and face mask as separate outputs
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md — Alignment math utilities and face mask generation with TDD
@@ -85,6 +85,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Environment and Detection | 2/2 | Complete   | 2026-03-10 |
-| 2. Face Crop and Alignment | 0/2 | Not started | - |
+| 2. Face Crop and Alignment | 2/2 | Complete   | 2026-03-10 |
 | 3. Face Shape Morphing | 0/? | Not started | - |
 | 4. Compositing and Integration | 0/? | Not started | - |
