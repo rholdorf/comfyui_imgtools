@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-10T18:32:16.519Z"
-last_activity: 2026-03-10 -- Completed 02-02 FaceCropAlign node
+status: in-progress
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-10T19:17:00.717Z"
+last_activity: 2026-03-10 -- Completed 03-01 crop landmarks and morph utils
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 6
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Morph source face shape to match target face proportions so downstream face swap produces natural results
-**Current focus:** Phase 2 complete, ready for Phase 3 - Crop Logic
+**Current focus:** Phase 3 - Face Shape Morphing (plan 1 of 2 complete)
 
 ## Current Position
 
-Phase: 2 of 4 (Face Crop and Alignment) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-03-10 -- Completed 02-02 FaceCropAlign node
+Phase: 3 of 4 (Face Shape Morphing) -- IN PROGRESS
+Plan: 1 of 2 in current phase
+Status: Plan 03-01 complete, 03-02 remaining
+Last activity: 2026-03-10 -- Completed 03-01 crop landmarks and morph utils
 
-Progress: [██████████] 100%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
 | Phase 02 P01 | 4min | 2 tasks | 5 files |
 | Phase 02 P02 | 3min | 2 tasks | 3 files |
+| Phase 03 P01 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Recent decisions affecting current work:
 - [Phase 02]: Inlined FACE_OVAL_INDICES in conftest fixtures to avoid cross-module TDD dependency
 - [Phase 02]: Used package-qualified imports in tests to match existing face_detection pattern
 - [Phase 02]: Gated FaceCropAlign behind same _face_nodes_available check as FaceDetect
+- [Phase 03]: Added near-duplicate point deduplication before TPS estimation for numerical stability
 
 ### Pending Todos
 
@@ -81,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T18:32:16.517Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-face-shape-morphing/03-CONTEXT.md
+Last session: 2026-03-10T19:17:00.714Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
