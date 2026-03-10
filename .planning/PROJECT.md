@@ -1,85 +1,65 @@
-# PROJECT: ComfyUI Image Tools
+# ComfyUI Face Shape Matcher
 
-## Vision
+## What This Is
 
-Custom node para ComfyUI que redimensiona imagens automaticamente para dimensões compatíveis com modelos de geração de imagem, evitando artefatos no KSampler.
+A set of ComfyUI custom nodes that pre-process face geometry before face swapping. The nodes deform/morph a source face to match the shape and proportions of a target face, solving the common problem where face swap tools (like ReActor) replace features but preserve the original face shape — leading to uncanny results when face shapes differ significantly. Built as an extension to the existing comfyui_imgtools project.
 
-## Problem Statement
+## Core Value
 
-Quando imagens com dimensões não-padrão são processadas pelo KSampler no ComfyUI, algumas linhas ou colunas acabam corrompidas com pixels incorretos. Isso é especialmente problemático em fluxos img-to-img.
-
-## Solution
-
-Um node que:
-1. Recebe uma imagem de entrada
-2. Identifica as dimensões padrão mais próximas para o modelo selecionado
-3. Aplica crop centralizado para ajustar a imagem ao tamanho correto
-4. Retorna a imagem pronta para processamento sem artefatos
+Morph the source face shape to match the target face proportions so that downstream face swap produces natural-looking results regardless of face shape differences.
 
 ## Requirements
 
-### Functional
-- **Seleção de modelo via dropdown**: Stable Diffusion, Flux, Z-Image Turbo
-- **Crop centralizado**: Sempre cortar a partir do centro da imagem
-- **Saída simples**: Apenas a imagem cropada (sem metadados extras)
-- **Precisão na escolha de dimensões**: Priorizar dimensões ótimas para cada modelo
+### Validated
 
-### Non-Functional
-- Integração nativa com ComfyUI
-- Performance adequada para uso em workflows
-- Batch processing suportado
+- ✓ ImageDimensionFitter node — existing
+- ✓ ImagePaddingCalculator node — existing
+- ✓ PathSplitter node — existing
 
-## Scope
+### Active
 
-### In Scope (v1)
-- Node com dropdown para seleção de modelo (SD, Flux, Z-Turbo)
-- Tabela de dimensões padrão para cada modelo
-- Algoritmo de seleção de dimensão mais próxima
-- Crop centralizado da imagem
-- Retorno da imagem cropada
+- [ ] Face crop & align node — detect face landmarks with MediaPipe, crop face region, align to upright orientation
+- [ ] Face shape morph node — warp cropped/aligned source face to match target face proportions (jaw/chin, width/height ratio, forehead, full head silhouette)
+- [ ] Face composite node — paste morphed face back into original image with feathered mask blending
+- [ ] Strength parameter (0-1 slider) — control how much morphing is applied, from no change to full match
+- [ ] Face index selection — let user pick which face to process by index when multiple faces detected
+- [ ] Output full image + cropped face + mask from each node for inspection and downstream use
+- [ ] Mac / Apple Silicon / MLX compatibility — all processing must work on macOS without CUDA
+- [ ] Handle tilted/rotated faces — align before morphing, de-align after compositing
 
-### Out of Scope (v1)
-- Upscale/downscale (apenas crop)
-- Modelos customizados (apenas os 3 pré-definidos)
-- Detecção de faces/objetos para crop inteligente
-- Múltiplas posições de crop (topo, base, etc.)
+### Out of Scope
 
-## Technical Context
+- Face swap itself — handled by ReActor or other existing swap nodes
+- Real-time video processing — batch image processing only
+- Training or fine-tuning models — use pre-trained MediaPipe face mesh
+- GPU-only operations — must work on CPU/MPS (Apple Silicon)
 
-### Stack
-- Python (ComfyUI custom node)
-- torch/PIL para manipulação de imagens
-- Estrutura padrão de custom nodes ComfyUI
+## Context
 
-### Architecture
-- Single node com:
-  - Input: IMAGE
-  - Widget: dropdown para modelo
-  - Output: IMAGE
+- This extends the existing comfyui_imgtools custom node package
+- Existing nodes follow ComfyUI convention: stateless, INPUT_TYPES/RETURN_TYPES, IMAGE tensors [batch, h, w, c]
+- Target workflow: source image → face shape match nodes → ReActor face swap → output
+- Similar nodes exist (FaceShaper series) but don't work on Mac
+- MediaPipe chosen for face detection: 468 landmarks, runs well on Mac, no GPU required
+- Deformation approach: best technique for quality (thin-plate spline, mesh warp, or hybrid — to be determined during research)
+- Split node design chosen over all-in-one for flexibility and intermediate inspection
 
-### Standard Dimensions Reference
+## Constraints
 
-**Stable Diffusion (múltiplos de 64):**
-- 512x512, 512x768, 768x512
-- 640x640, 768x768
-- 512x896, 896x512
+- **Platform**: Must run on macOS with Apple Silicon (MPS backend) — no CUDA-only dependencies
+- **Ecosystem**: Must follow existing ComfyUI node conventions and tensor format [batch, h, w, channels]
+- **Dependencies**: MediaPipe for face landmarks; avoid heavy dependencies that don't support Mac
+- **Integration**: Nodes must be composable with existing ComfyUI workflow nodes (ReActor, etc.)
 
-**Flux (múltiplos de 8, aspect ratios específicos):**
-- 1024x1024 (1:1)
-- 1152x896 (4:3)
-- 896x1152 (3:4)
-- 1216x832 (3:2)
-- 832x1216 (2:3)
-- 1344x768 (16:9)
-- 768x1344 (9:16)
+## Key Decisions
 
-**Z-Image Turbo:**
-- A ser pesquisado/confirmado
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| MediaPipe for face detection | 468 landmarks, Mac-compatible, no GPU needed | — Pending |
+| Split nodes (crop/morph/composite) | Flexibility, intermediate inspection, composability | — Pending |
+| Feathered mask blending | Smooth transition, simpler than Poisson, good enough quality | — Pending |
+| Face index selection | Match ReActor's UX, handle multi-face images | — Pending |
+| Strength 0-1 slider | User control over morphing intensity | — Pending |
 
-## Success Criteria
-
-- [ ] Node aparece corretamente no ComfyUI
-- [ ] Dropdown funciona com os 3 modelos
-- [ ] Imagens são cropadas para dimensões corretas
-- [ ] Nenhum artefato no KSampler após processamento
-- [ ] Crop é centralizado corretamente
+---
+*Last updated: 2026-03-10 after initialization*
