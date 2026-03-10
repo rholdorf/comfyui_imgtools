@@ -32,6 +32,14 @@ def mock_landmark_data():
     ]
 
 
+_FACE_OVAL_INDICES_FOR_FIXTURES = [
+    10, 338, 297, 332, 284, 251, 389, 356, 454, 323,
+    361, 288, 397, 365, 379, 378, 400, 377, 152, 148,
+    176, 149, 150, 136, 172, 58, 132, 93, 234, 127,
+    162, 21, 54, 103, 67, 109,
+]
+
+
 def _make_deterministic_landmarks(center_x, center_y, spread=30.0):
     """Create a (478, 2) landmark array with known eye and oval positions.
 
@@ -39,7 +47,8 @@ def _make_deterministic_landmarks(center_x, center_y, spread=30.0):
     Eye indices and face oval indices get specific, predictable positions.
     """
     from utils.alignment import LEFT_EYE_INDICES, RIGHT_EYE_INDICES
-    from utils.face_mask import FACE_OVAL_INDICES
+
+    FACE_OVAL_INDICES = _FACE_OVAL_INDICES_FOR_FIXTURES
 
     landmarks = np.zeros((478, 2), dtype=np.float64)
 
