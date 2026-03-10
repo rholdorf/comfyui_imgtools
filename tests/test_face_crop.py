@@ -27,8 +27,8 @@ class TestFaceCropAlignConventions:
     def test_return_types(self):
         from comfyui_imgtools.face_crop import FaceCropAlign
 
-        assert FaceCropAlign.RETURN_TYPES == ("IMAGE", "ALIGN_DATA", "MASK")
-        assert FaceCropAlign.RETURN_NAMES == ("cropped_face", "align_data", "face_mask")
+        assert FaceCropAlign.RETURN_TYPES == ("IMAGE", "ALIGN_DATA", "MASK", "FACE_LANDMARKS")
+        assert FaceCropAlign.RETURN_NAMES == ("cropped_face", "align_data", "face_mask", "crop_landmarks")
 
     def test_category(self):
         from comfyui_imgtools.face_crop import FaceCropAlign
@@ -48,7 +48,7 @@ class TestFaceCropAlignOutputs:
         from comfyui_imgtools.face_crop import FaceCropAlign
 
         node = FaceCropAlign()
-        cropped, align_data, mask = node.crop_and_align(
+        cropped, align_data, mask, _ = node.crop_and_align(
             sample_face_image_tensor, mock_deterministic_landmarks
         )
 
@@ -72,7 +72,7 @@ class TestFaceCropAlignOutputs:
         from comfyui_imgtools.face_crop import FaceCropAlign
 
         node = FaceCropAlign()
-        _, align_data, _ = node.crop_and_align(
+        _, align_data, _, _ = node.crop_and_align(
             sample_face_image_tensor, mock_deterministic_landmarks
         )
 
@@ -106,10 +106,10 @@ class TestFaceCropAlignFaceSelection:
         from comfyui_imgtools.face_crop import FaceCropAlign
 
         node = FaceCropAlign()
-        cropped_0, data_0, _ = node.crop_and_align(
+        cropped_0, data_0, _, _ = node.crop_and_align(
             sample_face_image_tensor, mock_multi_face_landmarks, face_index=0
         )
-        cropped_1, data_1, _ = node.crop_and_align(
+        cropped_1, data_1, _, _ = node.crop_and_align(
             sample_face_image_tensor, mock_multi_face_landmarks, face_index=1
         )
 
@@ -121,7 +121,7 @@ class TestFaceCropAlignFaceSelection:
 
         node = FaceCropAlign()
         # face_index=5 but only 1 face -- should not crash, should clamp to 0
-        cropped, align_data, mask = node.crop_and_align(
+        cropped, align_data, mask, _ = node.crop_and_align(
             sample_face_image_tensor, mock_deterministic_landmarks, face_index=5
         )
         assert isinstance(cropped, torch.Tensor)
@@ -136,7 +136,7 @@ class TestFaceCropAlignAlignment:
         from comfyui_imgtools.face_crop import FaceCropAlign
 
         node = FaceCropAlign()
-        _, align_data, _ = node.crop_and_align(
+        _, align_data, _, _ = node.crop_and_align(
             sample_face_image_tensor,
             mock_deterministic_landmarks,
             align=False,
@@ -150,7 +150,7 @@ class TestFaceCropAlignAlignment:
         from comfyui_imgtools.face_crop import FaceCropAlign
 
         node = FaceCropAlign()
-        _, align_data, _ = node.crop_and_align(
+        _, align_data, _, _ = node.crop_and_align(
             sample_face_image_tensor,
             mock_landmarks_tilted,
             align=True,

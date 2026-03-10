@@ -35,8 +35,8 @@ class FaceCropAlign:
             },
         }
 
-    RETURN_TYPES = ("IMAGE", "ALIGN_DATA", "MASK")
-    RETURN_NAMES = ("cropped_face", "align_data", "face_mask")
+    RETURN_TYPES = ("IMAGE", "ALIGN_DATA", "MASK", "FACE_LANDMARKS")
+    RETURN_NAMES = ("cropped_face", "align_data", "face_mask", "crop_landmarks")
     FUNCTION = "crop_and_align"
     CATEGORY = "imgtools/face"
 
@@ -66,6 +66,7 @@ class FaceCropAlign:
         if x2 <= x1 or y2 <= y1:
             cropped = np.zeros((1, 1, 3), dtype=np.float32)
             mask_np = np.zeros((1, 1), dtype=np.float32)
+            crop_landmarks_out = []
         else:
             # Crop aligned image
             cropped = aligned[y1:y2, x1:x2]
@@ -79,6 +80,12 @@ class FaceCropAlign:
             crop_h = y2 - y1
             crop_w = x2 - x1
             mask_np = generate_face_mask(crop_landmarks, crop_h, crop_w)
+
+            # Package crop-space landmarks in FACE_LANDMARKS format
+            crop_landmarks_out = [{
+                "landmarks": crop_landmarks,
+                "landmarks_3d": landmarks[idx].get("landmarks_3d", np.zeros((478, 3))),
+            }]
 
         # Compute rotation center (eye midpoint)
         left_eye, right_eye = compute_eye_centers(landmarks_px)
@@ -97,4 +104,4 @@ class FaceCropAlign:
         cropped_tensor = torch.from_numpy(cropped.astype(np.float32)).unsqueeze(0)
         mask_tensor = torch.from_numpy(mask_np).unsqueeze(0)
 
-        return (cropped_tensor, align_data, mask_tensor)
+        return (cropped_tensor, align_data, mask_tensor, crop_landmarks_out)
