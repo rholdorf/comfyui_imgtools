@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Detection
 
-- [ ] **DET-01**: Node detects face landmarks using MediaPipe Face Landmarker (478 points)
+- [x] **DET-01**: Node detects face landmarks using MediaPipe Face Landmarker (478 points)
 - [ ] **DET-02**: Node crops face region with configurable padding margin
 - [ ] **DET-03**: Node aligns tilted/rotated faces to upright orientation based on eye positions
 - [ ] **DET-04**: User can select which face to process by index when multiple faces detected
@@ -34,7 +34,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PLAT-01**: All nodes run on macOS with Apple Silicon (no CUDA-only dependencies)
 - [x] **PLAT-02**: Dependencies limited to MediaPipe + scikit-image (+ existing ComfyUI deps)
-- [ ] **PLAT-03**: Nodes follow ComfyUI conventions (INPUT_TYPES, RETURN_TYPES, IMAGE tensors)
+- [x] **PLAT-03**: Nodes follow ComfyUI conventions (INPUT_TYPES, RETURN_TYPES, IMAGE tensors)
 
 ## v2 Requirements
 
@@ -64,7 +64,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DET-01 | Phase 1 | Pending |
+| DET-01 | Phase 1 | Complete |
 | DET-02 | Phase 2 | Pending |
 | DET-03 | Phase 2 | Pending |
 | DET-04 | Phase 2 | Pending |
@@ -80,7 +80,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-04 | Phase 4 | Pending |
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
-| PLAT-03 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total

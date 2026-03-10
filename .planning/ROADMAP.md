@@ -12,7 +12,7 @@ This roadmap delivers a three-node face morphing pipeline (FaceCropAlign, FaceSh
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Environment and Detection** - Verify Python/MediaPipe compatibility, implement face landmark detection core
+- [x] **Phase 1: Environment and Detection** - Verify Python/MediaPipe compatibility, implement face landmark detection core (completed 2026-03-10)
 - [ ] **Phase 2: Face Crop and Alignment** - Build FaceCropAlign node with rotation handling, padding, and multi-face selection
 - [ ] **Phase 3: Face Shape Morphing** - Build FaceShapeMorph node with TPS warping and strength control
 - [ ] **Phase 4: Compositing and Integration** - Build FaceComposite node with feathered blending and end-to-end pipeline validation
@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Node detects 478 face landmarks from a test image and returns landmark coordinate data
   3. Node follows ComfyUI conventions (INPUT_TYPES, RETURN_TYPES, IMAGE tensor format)
   4. Only MediaPipe and scikit-image are added as new dependencies beyond existing ComfyUI deps
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 01-01-PLAN.md — Utils foundation: MediaPipe helper, landmark utilities, test scaffold
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Environment and Detection | 0/2 | Planning | - |
+| 1. Environment and Detection | 2/2 | Complete   | 2026-03-10 |
 | 2. Face Crop and Alignment | 0/? | Not started | - |
 | 3. Face Shape Morphing | 0/? | Not started | - |
 | 4. Compositing and Integration | 0/? | Not started | - |
