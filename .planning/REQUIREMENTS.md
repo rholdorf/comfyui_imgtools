@@ -10,10 +10,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Detection
 
 - [x] **DET-01**: Node detects face landmarks using MediaPipe Face Landmarker (478 points)
-- [ ] **DET-02**: Node crops face region with configurable padding margin
-- [ ] **DET-03**: Node aligns tilted/rotated faces to upright orientation based on eye positions
+- [x] **DET-02**: Node crops face region with configurable padding margin
+- [x] **DET-03**: Node aligns tilted/rotated faces to upright orientation based on eye positions
 - [ ] **DET-04**: User can select which face to process by index when multiple faces detected
-- [ ] **DET-05**: Node outputs cropped face image, alignment transform data, and face mask
+- [x] **DET-05**: Node outputs cropped face image, alignment transform data, and face mask
 
 ### Morphing
 
@@ -65,10 +65,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DET-01 | Phase 1 | Complete |
-| DET-02 | Phase 2 | Pending |
-| DET-03 | Phase 2 | Pending |
+| DET-02 | Phase 2 | Complete |
+| DET-03 | Phase 2 | Complete |
 | DET-04 | Phase 2 | Pending |
-| DET-05 | Phase 2 | Pending |
+| DET-05 | Phase 2 | Complete |
 | MORPH-01 | Phase 3 | Pending |
 | MORPH-02 | Phase 3 | Pending |
 | MORPH-03 | Phase 3 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-10T16:16:26.904Z"
-last_activity: 2026-03-10 -- Completed 01-02 FaceDetect node
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-10T17:10:04.265Z"
+last_activity: 2026-03-10 -- Completed 02-01 alignment math and face mask
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Morph source face shape to match target face proportions so downstream face swap produces natural results
-**Current focus:** Phase 1 - Environment and Detection
+**Current focus:** Phase 2 - Face Crop and Alignment
 
 ## Current Position
 
-Phase: 1 of 4 (Environment and Detection)
-Plan: 2 of 2 in current phase (COMPLETE)
+Phase: 2 of 4 (Face Crop and Alignment)
+Plan: 1 of 2 in current phase
 Status: Executing
-Last activity: 2026-03-10 -- Completed 01-02 FaceDetect node
+Last activity: 2026-03-10 -- Completed 02-01 alignment math and face mask
 
-Progress: [██████████] 100%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 01 P02 | 2min | 2 tasks | 3 files |
+| Phase 02 P01 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [01-01]: Added pyproject.toml with pythonpath config for pytest module resolution
 - [01-01]: Landmarker caching includes parameter comparison for confidence thresholds
 - [Phase 01-02]: Used try/except conditional import for graceful degradation when mediapipe missing
+- [Phase 02]: Used abs(dx) in arctan2 angle calculation to handle MediaPipe left/right eye convention
+- [Phase 02]: Inlined FACE_OVAL_INDICES in conftest fixtures to avoid cross-module TDD dependency
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T15:53:31.160Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-10T17:10:04.263Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
