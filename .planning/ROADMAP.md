@@ -31,8 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — Utils foundation: MediaPipe helper, landmark utilities, test scaffold
-- [ ] 01-02-PLAN.md — FaceDetect node implementation and registration
+- [x] 01-01-PLAN.md — Utils foundation: MediaPipe helper, landmark utilities, test scaffold
+- [x] 01-02-PLAN.md — FaceDetect node implementation and registration
 
 ### Phase 2: Face Crop and Alignment
 **Goal**: Users can extract a cropped, upright-aligned face from any image with control over which face and padding
@@ -43,10 +43,11 @@ Plans:
   2. Tilted or rotated faces are aligned to upright orientation based on eye positions
   3. User can select which face to process by index when multiple faces are present
   4. Node outputs cropped face image, alignment transform data, and face mask as separate outputs
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — Alignment math utilities and face mask generation with TDD
+- [ ] 02-02-PLAN.md — FaceCropAlign node implementation and registration
 
 ### Phase 3: Face Shape Morphing
 **Goal**: Users can morph a source face shape to match a target face's proportions with adjustable intensity
@@ -84,6 +85,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Environment and Detection | 2/2 | Complete   | 2026-03-10 |
-| 2. Face Crop and Alignment | 0/? | Not started | - |
+| 2. Face Crop and Alignment | 0/2 | Not started | - |
 | 3. Face Shape Morphing | 0/? | Not started | - |
 | 4. Compositing and Integration | 0/? | Not started | - |
