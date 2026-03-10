@@ -73,10 +73,11 @@ Plans:
   2. Feathered mask blending produces smooth face-to-background transitions with no visible seams
   3. Reverse alignment transform correctly restores original face orientation (no rotation artifacts)
   4. Full three-node pipeline (crop/align -> morph -> composite) produces a natural-looking result from source and target face images
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — FaceComposite node with TDD (reverse transform, alpha blending, graceful degradation)
+- [ ] 04-02-PLAN.md — Node registration and end-to-end pipeline verification
 
 ## Progress
 
@@ -88,4 +89,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Environment and Detection | 2/2 | Complete   | 2026-03-10 |
 | 2. Face Crop and Alignment | 2/2 | Complete   | 2026-03-10 |
 | 3. Face Shape Morphing | 0/2 | Not started | - |
-| 4. Compositing and Integration | 0/? | Not started | - |
+| 4. Compositing and Integration | 0/2 | Not started | - |
