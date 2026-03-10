@@ -28,10 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Node detects 478 face landmarks from a test image and returns landmark coordinate data
   3. Node follows ComfyUI conventions (INPUT_TYPES, RETURN_TYPES, IMAGE tensor format)
   4. Only MediaPipe and scikit-image are added as new dependencies beyond existing ComfyUI deps
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md — Utils foundation: MediaPipe helper, landmark utilities, test scaffold
+- [ ] 01-02-PLAN.md — FaceDetect node implementation and registration
 
 ### Phase 2: Face Crop and Alignment
 **Goal**: Users can extract a cropped, upright-aligned face from any image with control over which face and padding
@@ -82,7 +83,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Environment and Detection | 0/? | Not started | - |
+| 1. Environment and Detection | 0/2 | Planning | - |
 | 2. Face Crop and Alignment | 0/? | Not started | - |
 | 3. Face Shape Morphing | 0/? | Not started | - |
 | 4. Compositing and Integration | 0/? | Not started | - |
