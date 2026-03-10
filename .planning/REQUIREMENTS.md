@@ -17,11 +17,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Morphing
 
-- [ ] **MORPH-01**: Node warps source face shape to match target face proportions using TPS
-- [ ] **MORPH-02**: Strength parameter (0.0-1.0) controls morph intensity
+- [x] **MORPH-01**: Node warps source face shape to match target face proportions using TPS
+- [x] **MORPH-02**: Strength parameter (0.0-1.0) controls morph intensity
 - [x] **MORPH-03**: Node uses ~60 face contour landmarks (not all 478) for efficient warping
-- [ ] **MORPH-04**: Interior facial features (eyes, nose, mouth) are anchored to prevent distortion
-- [ ] **MORPH-05**: Node outputs morphed face image and warp mask
+- [x] **MORPH-04**: Interior facial features (eyes, nose, mouth) are anchored to prevent distortion
+- [x] **MORPH-05**: Node outputs morphed face image and warp mask
 
 ### Compositing
 
@@ -69,11 +69,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DET-03 | Phase 2 | Complete |
 | DET-04 | Phase 2 | Complete |
 | DET-05 | Phase 2 | Complete |
-| MORPH-01 | Phase 3 | Pending |
-| MORPH-02 | Phase 3 | Pending |
+| MORPH-01 | Phase 3 | Complete |
+| MORPH-02 | Phase 3 | Complete |
 | MORPH-03 | Phase 3 | Complete |
-| MORPH-04 | Phase 3 | Pending |
-| MORPH-05 | Phase 3 | Pending |
+| MORPH-04 | Phase 3 | Complete |
+| MORPH-05 | Phase 3 | Complete |
 | COMP-01 | Phase 4 | Pending |
 | COMP-02 | Phase 4 | Pending |
 | COMP-03 | Phase 4 | Pending |
