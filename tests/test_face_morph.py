@@ -12,11 +12,14 @@ from comfyui_imgtools.utils.morph_utils import MORPH_CONTROL_INDICES
 # Fixtures
 # ---------------------------------------------------------------------------
 
-def _make_morph_landmarks(center_x, center_y, eye_spread=30.0, face_spread=40.0):
+def _make_morph_landmarks(center_x, center_y, eye_spread=30.0, face_spread=40.0,
+                          eye_size=5.0):
     """Create deterministic 478-point landmarks with controllable geometry.
 
-    eye_spread controls horizontal distance from center to each eye.
+    eye_spread controls horizontal distance from center to each eye center.
     face_spread controls the face oval radius.
+    eye_size controls the radius of the elliptical spread of eye landmarks
+    (determines intra-eye distances like corner-to-corner).
     """
     from comfyui_imgtools.utils.alignment import LEFT_EYE_INDICES, RIGHT_EYE_INDICES
     from comfyui_imgtools.utils.face_mask import FACE_OVAL_INDICES
@@ -29,10 +32,19 @@ def _make_morph_landmarks(center_x, center_y, eye_spread=30.0, face_spread=40.0)
     landmarks[:, 1] = center_y + rng.uniform(-face_spread * 0.5, face_spread * 0.5, 478)
 
     # Set eye landmarks: subject left eye = image right, subject right eye = image left
-    for idx in LEFT_EYE_INDICES:
-        landmarks[idx] = [center_x + eye_spread, center_y - 10.0]
-    for idx in RIGHT_EYE_INDICES:
-        landmarks[idx] = [center_x - eye_spread, center_y - 10.0]
+    # Give each eye an elliptical spread so corner indices have distinct positions
+    for i, idx in enumerate(LEFT_EYE_INDICES):
+        angle = 2 * np.pi * i / len(LEFT_EYE_INDICES)
+        landmarks[idx] = [
+            center_x + eye_spread + eye_size * np.cos(angle),
+            center_y - 10.0 + eye_size * 0.6 * np.sin(angle),
+        ]
+    for i, idx in enumerate(RIGHT_EYE_INDICES):
+        angle = 2 * np.pi * i / len(RIGHT_EYE_INDICES)
+        landmarks[idx] = [
+            center_x - eye_spread + eye_size * np.cos(angle),
+            center_y - 10.0 + eye_size * 0.6 * np.sin(angle),
+        ]
 
     # Nose tip (index 1)
     landmarks[1] = [center_x, center_y + 5.0]
@@ -58,8 +70,8 @@ def source_landmarks():
 
 @pytest.fixture
 def target_landmarks():
-    """Target face landmarks centered at (128, 128) with eyes 80px apart (wider face)."""
-    lms = _make_morph_landmarks(128.0, 128.0, eye_spread=40.0, face_spread=50.0)
+    """Target face landmarks centered at (128, 128) with wider face and larger eyes."""
+    lms = _make_morph_landmarks(128.0, 128.0, eye_spread=40.0, face_spread=50.0, eye_size=8.0)
     return [{"landmarks": lms, "landmarks_3d": np.zeros((478, 3), dtype=np.float64)}]
 
 
@@ -306,9 +318,9 @@ class TestFeatureCoherence:
         assert rmse > 0.01, f"Features should move at strength=1.0, RMSE={rmse}"
 
     def test_eye_corner_distance_closer_to_target(self, source_landmarks, target_landmarks):
-        """After morph, eye-corner pair distance should be closer to target than source."""
+        """After morph at strength=1.0, eye-corner proportions in normalized space
+        should match target proportions, not source proportions."""
         from comfyui_imgtools.utils.morph_utils import (
-            compute_morph_warp,
             normalize_landmarks,
             MORPH_CONTROL_INDICES,
         )
@@ -317,38 +329,33 @@ class TestFeatureCoherence:
         src_lms = source_landmarks[0]["landmarks"]
         tgt_lms = target_landmarks[0]["landmarks"]
 
-        # Eye corner indices: 33, 133 (right eye corners), 362, 263 (left eye corners)
-        # Measure right eye inner-to-outer distance
-        src_right_eye_dist = np.linalg.norm(src_lms[33] - src_lms[133])
-        tgt_right_eye_dist = np.linalg.norm(tgt_lms[33] - tgt_lms[133])
-
-        # Compute morphed control points at strength=1.0
+        # Compute in normalized (IED-independent) space
         src_pts = src_lms[MORPH_CONTROL_INDICES]
         tgt_pts = tgt_lms[MORPH_CONTROL_INDICES]
 
         src_eye_centers = compute_eye_centers(src_lms)
         tgt_eye_centers = compute_eye_centers(tgt_lms)
 
-        src_norm, src_ied = normalize_landmarks(src_pts, src_eye_centers)
+        src_norm, _ = normalize_landmarks(src_pts, src_eye_centers)
         tgt_norm, _ = normalize_landmarks(tgt_pts, tgt_eye_centers)
 
+        # At strength=1.0, morphed_norm = tgt_norm
         morphed_norm = src_norm + 1.0 * (tgt_norm - src_norm)
-        left_eye, right_eye = src_eye_centers
-        center = (left_eye + right_eye) / 2.0
-        morphed_px = morphed_norm * src_ied + center
 
         # Find indices of eye corners 33 and 133 in MORPH_CONTROL_INDICES
         idx_33 = MORPH_CONTROL_INDICES.index(33)
         idx_133 = MORPH_CONTROL_INDICES.index(133)
 
-        morphed_right_eye_dist = np.linalg.norm(morphed_px[idx_33] - morphed_px[idx_133])
+        src_eye_dist_norm = np.linalg.norm(src_norm[idx_33] - src_norm[idx_133])
+        tgt_eye_dist_norm = np.linalg.norm(tgt_norm[idx_33] - tgt_norm[idx_133])
+        morphed_eye_dist_norm = np.linalg.norm(morphed_norm[idx_33] - morphed_norm[idx_133])
 
-        # Morphed distance should be closer to target than to source
-        dist_to_src = abs(morphed_right_eye_dist - src_right_eye_dist)
-        dist_to_tgt = abs(morphed_right_eye_dist - tgt_right_eye_dist)
+        # Morphed normalized distance should be closer to target than source
+        dist_to_src = abs(morphed_eye_dist_norm - src_eye_dist_norm)
+        dist_to_tgt = abs(morphed_eye_dist_norm - tgt_eye_dist_norm)
         assert dist_to_tgt < dist_to_src, (
-            f"Morphed eye dist ({morphed_right_eye_dist:.1f}) should be closer to "
-            f"target ({tgt_right_eye_dist:.1f}) than source ({src_right_eye_dist:.1f})"
+            f"Morphed eye dist norm ({morphed_eye_dist_norm:.4f}) should be closer to "
+            f"target ({tgt_eye_dist_norm:.4f}) than source ({src_eye_dist_norm:.4f})"
         )
 
     def test_relative_spacing_preserved(self, source_landmarks, target_landmarks):
