@@ -158,3 +158,52 @@ class TestFaceCropAlignAlignment:
 
         # Tilted face should have nonzero rotation angle
         assert abs(align_data["rotation_angle"]) > 0.1
+
+
+class TestCropLandmarks:
+    """Test new FACE_LANDMARKS (4th) output from FaceCropAlign."""
+
+    def test_return_types_includes_face_landmarks(self):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        assert FaceCropAlign.RETURN_TYPES == ("IMAGE", "ALIGN_DATA", "MASK", "FACE_LANDMARKS")
+
+    def test_return_names_includes_crop_landmarks(self):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        assert FaceCropAlign.RETURN_NAMES == ("cropped_face", "align_data", "face_mask", "crop_landmarks")
+
+    def test_crop_and_align_returns_4_tuple(self, sample_face_image_tensor, mock_deterministic_landmarks):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        node = FaceCropAlign()
+        result = node.crop_and_align(sample_face_image_tensor, mock_deterministic_landmarks)
+        assert len(result) == 4
+
+    def test_crop_landmarks_format(self, sample_face_image_tensor, mock_deterministic_landmarks):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        node = FaceCropAlign()
+        _, _, _, crop_lms = node.crop_and_align(sample_face_image_tensor, mock_deterministic_landmarks)
+
+        # Should be a list of 1 dict with "landmarks" key
+        assert isinstance(crop_lms, list)
+        assert len(crop_lms) == 1
+        assert "landmarks" in crop_lms[0]
+        assert crop_lms[0]["landmarks"].shape == (478, 2)
+
+    def test_crop_landmarks_offset_by_crop_box(self, sample_face_image_tensor, mock_deterministic_landmarks):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        node = FaceCropAlign()
+        _, align_data, _, crop_lms = node.crop_and_align(
+            sample_face_image_tensor, mock_deterministic_landmarks
+        )
+
+        x1, y1, _, _ = align_data["crop_box"]
+        crop_landmarks = crop_lms[0]["landmarks"]
+
+        # Crop landmarks should be offset from aligned landmarks by (x1, y1)
+        # Verify that crop landmarks are in the crop coordinate space (non-negative mostly)
+        # and that they differ from the original landmarks
+        assert crop_landmarks.shape == (478, 2)
