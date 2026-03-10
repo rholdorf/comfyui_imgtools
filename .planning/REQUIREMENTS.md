@@ -25,10 +25,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Compositing
 
-- [ ] **COMP-01**: Node composites morphed face back into original image
-- [ ] **COMP-02**: Feathered mask blending for smooth face-to-background transition
-- [ ] **COMP-03**: Reverse alignment transform to match original face orientation
-- [ ] **COMP-04**: Node outputs full composited image and face region mask
+- [x] **COMP-01**: Node composites morphed face back into original image
+- [x] **COMP-02**: Feathered mask blending for smooth face-to-background transition
+- [x] **COMP-03**: Reverse alignment transform to match original face orientation
+- [x] **COMP-04**: Node outputs full composited image and face region mask
 
 ### Platform
 
@@ -74,10 +74,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MORPH-03 | Phase 3 | Complete |
 | MORPH-04 | Phase 3 | Complete |
 | MORPH-05 | Phase 3 | Complete |
-| COMP-01 | Phase 4 | Pending |
-| COMP-02 | Phase 4 | Pending |
-| COMP-03 | Phase 4 | Pending |
-| COMP-04 | Phase 4 | Pending |
+| COMP-01 | Phase 4 | Complete |
+| COMP-02 | Phase 4 | Complete |
+| COMP-03 | Phase 4 | Complete |
+| COMP-04 | Phase 4 | Complete |
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Complete |
