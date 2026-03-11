@@ -1,18 +1,18 @@
 """Face model NPZ persistence: save and load .facemodel.npz files.
 
-Schema (MODEL_VERSION = "1"):
+Schema (MODEL_VERSION = "2"):
     version:              0-d unicode string
     canonical_landmarks:  float64 (478, 2)
     head_dimensions:      float64 (3,)  -- [width, height, depth]
     control_indices:      int64   (N,)  -- variable length
-    landmark_stddev:      float64 (478, 2)
+    landmark_stddev:      float64 (478, 3)  -- 3D per-landmark standard deviations
 """
 
 from pathlib import Path
 
 import numpy as np
 
-MODEL_VERSION = "1"
+MODEL_VERSION = "2"
 
 # Expected keys: (dtype_kind, expected_shape or None for variable)
 _SCHEMA = {
@@ -20,7 +20,7 @@ _SCHEMA = {
     "canonical_landmarks": ("f", (478, 2)),
     "head_dimensions": ("f", (3,)),
     "control_indices": ("i", None),  # 1-d, variable length
-    "landmark_stddev": ("f", (478, 2)),
+    "landmark_stddev": ("f", (478, 3)),
 }
 
 
@@ -39,7 +39,7 @@ def save_face_model(
         canonical_landmarks: (478, 2) array of normalized landmark positions.
         head_dimensions: Dict with 'width', 'height', 'depth' float keys.
         control_indices: 1-d array of control point landmark indices.
-        landmark_stddev: (478, 2) array of per-landmark standard deviations.
+        landmark_stddev: (478, 3) array of per-landmark 3D standard deviations.
     """
     path = Path(path)
 
