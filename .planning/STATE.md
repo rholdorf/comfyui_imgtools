@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Versatile Model
-status: completed
-stopped_at: Completed 05-02-PLAN.md (Phase 5 complete)
-last_updated: "2026-03-11T19:28:36.530Z"
-last_activity: 2026-03-11 — Completed 05-02 pose pipeline integration
+status: in-progress
+stopped_at: Completed 06-01-PLAN.md (Phase 6 complete)
+last_updated: "2026-03-11T20:36:17Z"
+last_activity: 2026-03-11 — Completed 06-01 face model NPZ persistence
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-11)
 
 **Core value:** Morph source face shape to match target face proportions so downstream face swap produces natural results
-**Current focus:** Phase 5 - 3D Pose Foundation
+**Current focus:** Phase 7 - FaceModelBuilder Node
 
 ## Current Position
 
-Phase: 5 of 9 (3D Pose Foundation) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 5 Complete
-Last activity: 2026-03-11 — Completed 05-02 pose pipeline integration
+Phase: 6 of 9 (Model Persistence) -- COMPLETE
+Plan: 1 of 1 in current phase
+Status: Phase 6 Complete
+Last activity: 2026-03-11 — Completed 06-01 face model NPZ persistence
 
-Progress: [██████████] 100% (10/10 plans)
+Progress: [██████----] 60% (3/5 v1.1 plans)
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [██████████] 100% (10/10 plans)
 | 4. Compositing and Integration | 2 | ~8min | ~4min |
 | Phase 05 P01 | 2min | 2 tasks | 2 files |
 | Phase 05 P02 | 2min | 2 tasks | 4 files |
+| Phase 06 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Default output_facial_transformation_matrixes=False preserves v1.0 compat
 - [Phase 05]: hasattr guard for backward compat with older MediaPipe results
 - [Phase 05]: pose=None for faces without transformation matrix (graceful degradation)
+- [Phase 06]: NPZ schema stores head_dimensions as flat (3,) array, reconstructed to dict on load
+- [Phase 06]: allow_pickle=False always for security in np.load
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T19:25:00.000Z
-Stopped at: Completed 05-02-PLAN.md (Phase 5 complete)
+Last session: 2026-03-11T20:36:17Z
+Stopped at: Completed 06-01-PLAN.md (Phase 6 complete)
 Resume file: None

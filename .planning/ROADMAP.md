@@ -22,7 +22,7 @@
 **Milestone Goal:** Enable face shape morphing across diverse image compositions by building a canonical face model from multiple target images with 3D pose normalization.
 
 - [x] **Phase 5: 3D Pose Foundation** - Extract head pose from MediaPipe matrix, frontalize and IPD-normalize landmarks (completed 2026-03-11)
-- [ ] **Phase 6: Model Persistence** - Define and implement versioned .facemodel.npz file format with round-trip I/O
+- [x] **Phase 6: Model Persistence** - Define and implement versioned .facemodel.npz file format with round-trip I/O (completed 2026-03-11)
 - [ ] **Phase 7: FaceModelBuilder Node** - User-facing node that processes a directory of images into an averaged canonical face model
 - [ ] **Phase 8: FaceModelMorph Node** - User-facing node that applies a face model to source images via pose-aware delta and TPS warp
 - [ ] **Phase 9: Integration and Polish** - Edge case hardening, end-to-end pipeline validation, model preview visualization
@@ -55,7 +55,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — TDD: model_io.py with save/load and round-trip fidelity tests
+- [x] 06-01-PLAN.md — TDD: model_io.py with save/load and round-trip fidelity tests
 
 ### Phase 7: FaceModelBuilder Node
 **Goal**: User can build a canonical face model from a directory of target images, with quality feedback on which images contributed
@@ -115,7 +115,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 3. Face Shape Morphing | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
-| 6. Model Persistence | v1.1 | 0/1 | In progress | - |
+| 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
 | 7. FaceModelBuilder Node | v1.1 | 0/? | Not started | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
