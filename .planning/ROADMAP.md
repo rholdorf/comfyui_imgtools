@@ -21,7 +21,7 @@
 
 **Milestone Goal:** Enable face shape morphing across diverse image compositions by building a canonical face model from multiple target images with 3D pose normalization.
 
-- [ ] **Phase 5: 3D Pose Foundation** - Extract head pose from MediaPipe matrix, frontalize and IPD-normalize landmarks
+- [x] **Phase 5: 3D Pose Foundation** - Extract head pose from MediaPipe matrix, frontalize and IPD-normalize landmarks (completed 2026-03-11)
 - [ ] **Phase 6: Model Persistence** - Define and implement versioned .facemodel.npz file format with round-trip I/O
 - [ ] **Phase 7: FaceModelBuilder Node** - User-facing node that processes a directory of images into an averaged canonical face model
 - [ ] **Phase 8: FaceModelMorph Node** - User-facing node that applies a face model to source images via pose-aware delta and TPS warp
@@ -114,7 +114,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 2. Face Crop and Alignment | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 3. Face Shape Morphing | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
-| 5. 3D Pose Foundation | v1.1 | 0/2 | Planning | - |
+| 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
 | 6. Model Persistence | v1.1 | 0/? | Not started | - |
 | 7. FaceModelBuilder Node | v1.1 | 0/? | Not started | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
