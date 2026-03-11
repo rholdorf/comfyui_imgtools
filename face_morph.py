@@ -14,7 +14,6 @@ from .utils.morph_utils import (
     MORPH_CONTROL_INDICES,
     compute_morph_warp,
     generate_feathered_mask,
-    normalize_landmarks,
 )
 
 
@@ -80,8 +79,8 @@ class FaceShapeMorph:
             # 3. Convert source image to numpy
             img_np = source_image[0].cpu().numpy().astype(np.float64)
 
-            # 4. Compute TPS transform
-            tps = compute_morph_warp(src_lms, tgt_lms, strength, (h, w))
+            # 4. Compute TPS transform (Procrustes-aligned, pose-invariant)
+            tps, morphed_ctrl_px, head_scale = compute_morph_warp(src_lms, tgt_lms, strength, (h, w))
             if tps is None:
                 return self._passthrough(source_image, h, w, source_align_data)
 
@@ -93,34 +92,26 @@ class FaceShapeMorph:
                 preserve_range=True,
             )
 
-            # 6. Generate feathered mask from MORPHED landmark positions
-            #    Compute the same interpolation as compute_morph_warp internally
-            src_pts = src_lms[MORPH_CONTROL_INDICES]
-            tgt_pts = tgt_lms[MORPH_CONTROL_INDICES]
-            tgt_eye_centers = compute_eye_centers(tgt_lms)
-
-            src_norm, src_ied = normalize_landmarks(src_pts, src_eye_centers)
-            tgt_norm, _ = normalize_landmarks(tgt_pts, tgt_eye_centers)
-
-            morphed_norm = src_norm + strength * (tgt_norm - src_norm)
-            center = (left_eye + right_eye) / 2.0
-            morphed_ctrl_px = morphed_norm * src_ied + center
-
-            # Build full 478-point morphed landmarks for mask generation
-            # Start with source landmarks, update control point positions
+            # 6. Generate feathered mask from morphed landmark positions.
+            # Uses ONLY the morphed oval (not source) to avoid showing
+            # TPS-stretched background between the shrunk face and crop edge.
             morphed_full_lms = src_lms.copy()
             for i, ctrl_idx in enumerate(MORPH_CONTROL_INDICES):
                 morphed_full_lms[ctrl_idx] = morphed_ctrl_px[i]
 
             mask_np = generate_feathered_mask(morphed_full_lms, h, w)
 
-            # 7. Convert to tensors
+            # 7. Store head_scale in align_data for composite scaling
+            out_align_data = dict(source_align_data)
+            out_align_data["head_scale"] = float(head_scale)
+
+            # 8. Convert to tensors
             morphed_tensor = torch.from_numpy(
                 warped.astype(np.float32)
             ).unsqueeze(0)
             mask_tensor = torch.from_numpy(mask_np).unsqueeze(0)
 
-            return (morphed_tensor, mask_tensor, source_align_data)
+            return (morphed_tensor, mask_tensor, out_align_data)
 
         except Exception:
             return self._passthrough(source_image, h, w, source_align_data)

@@ -41,11 +41,12 @@ _FACE_OVAL_INDICES_FOR_FIXTURES = [
 ]
 
 
-def _make_deterministic_landmarks(center_x, center_y, spread=30.0):
+def _make_deterministic_landmarks(center_x, center_y, spread=30.0, height_ratio=1.3):
     """Create a (478, 2) landmark array with known eye and oval positions.
 
     Places landmarks in a deterministic pattern around the given center.
     Eye indices and face oval indices get specific, predictable positions.
+    height_ratio controls the face oval height/width ratio (>1 = taller face).
     """
     from utils.alignment import LEFT_EYE_INDICES, RIGHT_EYE_INDICES
 
@@ -72,7 +73,7 @@ def _make_deterministic_landmarks(center_x, center_y, spread=30.0):
         angle = 2 * np.pi * i / n_oval
         landmarks[idx] = [
             center_x + spread * np.cos(angle),
-            center_y + spread * 1.3 * np.sin(angle),
+            center_y + spread * height_ratio * np.sin(angle),
         ]
 
     return landmarks
