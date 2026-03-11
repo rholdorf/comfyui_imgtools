@@ -11,7 +11,7 @@ def _make_model_data():
         "canonical_landmarks": rng.random((478, 2)).astype(np.float64),
         "head_dimensions": {"width": 1.85, "height": 2.4, "depth": 1.1},
         "control_indices": np.array([10, 21, 54, 67, 93, 107, 276], dtype=np.int64),
-        "landmark_stddev": rng.random((478, 2)).astype(np.float64),
+        "landmark_stddev": rng.random((478, 3)).astype(np.float64),
     }
 
 
@@ -77,7 +77,7 @@ class TestValidationErrors:
         from utils.model_io import load_face_model
 
         path = tmp_path / "bad.facemodel.npz"
-        np.savez_compressed(path, version=np.array("1"))
+        np.savez_compressed(path, version=np.array("2"))
 
         with pytest.raises(ValueError, match="missing fields"):
             load_face_model(path)
@@ -106,15 +106,59 @@ class TestValidationErrors:
         path = tmp_path / "shape.facemodel.npz"
         np.savez_compressed(
             path,
-            version=np.array("1"),
+            version=np.array("2"),
             canonical_landmarks=np.zeros((100, 2)),  # wrong: should be (478, 2)
+            head_dimensions=np.zeros(3),
+            control_indices=np.zeros(5, dtype=np.int64),
+            landmark_stddev=np.zeros((478, 3)),
+        )
+
+        with pytest.raises(ValueError, match="expected shape"):
+            load_face_model(path)
+
+
+    def test_v1_file_raises_version_error(self, tmp_path):
+        """Loading a v1 file (with (478,2) stddev) raises ValueError mentioning version."""
+        from utils.model_io import load_face_model
+
+        path = tmp_path / "v1.facemodel.npz"
+        np.savez_compressed(
+            path,
+            version=np.array("1"),
+            canonical_landmarks=np.zeros((478, 2)),
             head_dimensions=np.zeros(3),
             control_indices=np.zeros(5, dtype=np.int64),
             landmark_stddev=np.zeros((478, 2)),
         )
 
+        with pytest.raises(ValueError, match="version"):
+            load_face_model(path)
+
+    def test_wrong_stddev_shape_v2_raises(self, tmp_path):
+        """v2 file with (478,2) stddev instead of (478,3) raises ValueError."""
+        from utils.model_io import load_face_model
+
+        path = tmp_path / "bad_stddev.facemodel.npz"
+        np.savez_compressed(
+            path,
+            version=np.array("2"),
+            canonical_landmarks=np.zeros((478, 2)),
+            head_dimensions=np.zeros(3),
+            control_indices=np.zeros(5, dtype=np.int64),
+            landmark_stddev=np.zeros((478, 2)),  # wrong: should be (478, 3) in v2
+        )
+
         with pytest.raises(ValueError, match="expected shape"):
             load_face_model(path)
+
+
+class TestVersion:
+    """Model version must be 2."""
+
+    def test_model_version_is_2(self):
+        """MODEL_VERSION constant must be '2'."""
+        from utils.model_io import MODEL_VERSION
+        assert MODEL_VERSION == "2"
 
 
 class TestFileSize:
