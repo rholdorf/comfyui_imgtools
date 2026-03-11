@@ -15,22 +15,27 @@ _landmarker = None
 _landmarker_params = None
 
 
-def get_landmarker(min_detection_confidence=0.5, min_presence_confidence=0.5):
+def get_landmarker(min_detection_confidence=0.5, min_presence_confidence=0.5,
+                   output_facial_transformation_matrixes=False):
     """Get or create a cached FaceLandmarker instance.
 
     If the model file is not present, it will be auto-downloaded from Google's CDN.
-    If confidence parameters differ from the cached instance, a new one is created.
+    If any parameter differs from the cached instance, a new one is created.
 
     Args:
         min_detection_confidence: Minimum confidence for face detection (0.0-1.0).
         min_presence_confidence: Minimum confidence for face presence (0.0-1.0).
+        output_facial_transformation_matrixes: Whether to output the 4x4 facial
+            transformation matrix for each detected face. Default False for
+            backward compatibility.
 
     Returns:
         A mediapipe FaceLandmarker instance.
     """
     global _landmarker, _landmarker_params
 
-    params = (min_detection_confidence, min_presence_confidence)
+    params = (min_detection_confidence, min_presence_confidence,
+              output_facial_transformation_matrixes)
 
     if _landmarker is not None and _landmarker_params == params:
         return _landmarker
@@ -49,6 +54,7 @@ def get_landmarker(min_detection_confidence=0.5, min_presence_confidence=0.5):
         num_faces=10,
         min_face_detection_confidence=min_detection_confidence,
         min_face_presence_confidence=min_presence_confidence,
+        output_facial_transformation_matrixes=output_facial_transformation_matrixes,
     )
     _landmarker = vision.FaceLandmarker.create_from_options(options)
     _landmarker_params = params

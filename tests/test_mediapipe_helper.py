@@ -22,6 +22,18 @@ class TestGetLandmarker:
         l2 = get_landmarker()
         assert l1 is l2
 
+    def test_different_matrix_param_creates_new_instance(self):
+        """Changing output_facial_transformation_matrixes creates a new landmarker."""
+        l1 = get_landmarker(output_facial_transformation_matrixes=False)
+        l2 = get_landmarker(output_facial_transformation_matrixes=True)
+        assert l1 is not l2
+
+    def test_same_matrix_param_returns_cached(self):
+        """Same output_facial_transformation_matrixes value returns cached instance."""
+        l1 = get_landmarker(output_facial_transformation_matrixes=True)
+        l2 = get_landmarker(output_facial_transformation_matrixes=True)
+        assert l1 is l2
+
     @pytest.mark.slow
     def test_model_auto_download(self):
         """If model file is missing, get_landmarker() downloads it."""
