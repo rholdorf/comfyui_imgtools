@@ -67,11 +67,11 @@ Plans:
   3. Node outputs a quality report string listing each image with used/rejected status, yaw/pitch/roll values, and confidence
   4. Node outputs a landmark preview image showing the canonical model landmarks plotted on a canvas for visual validation
   5. Model file is saved to disk as .facemodel.npz and can be reloaded in future sessions
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — TDD: model_io v2 schema update + core model_builder.py pipeline functions
+- [ ] 07-02-PLAN.md — FaceModelBuilder node class with quality report, preview rendering, and registration
 
 ### Phase 8: FaceModelMorph Node
 **Goal**: User can apply a canonical face model to any source image, producing a morphed result with pose-aware shape matching
@@ -116,6 +116,6 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
 | 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
-| 7. FaceModelBuilder Node | v1.1 | 0/? | Not started | - |
+| 7. FaceModelBuilder Node | v1.1 | 0/2 | Not started | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
