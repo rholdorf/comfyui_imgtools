@@ -378,3 +378,170 @@ class TestBuildFaceModel:
 
         with pytest.raises(ValueError, match="No accepted"):
             build_face_model(str(tmp_path))
+
+
+# ---------------------------------------------------------------------------
+# TestQualityReport
+# ---------------------------------------------------------------------------
+
+class TestQualityReport:
+    """format_quality_report: text table formatting and sort order."""
+
+    def _make_results(self):
+        """Build a sample results list with all three statuses."""
+        return [
+            {"filename": "a.jpg", "status": "ACCEPTED", "yaw": 5.0, "pitch": 3.0,
+             "roll": 1.0, "confidence": 0.95, "weight": 0.99},
+            {"filename": "b.jpg", "status": "ACCEPTED", "yaw": -10.0, "pitch": 2.0,
+             "roll": -1.0, "confidence": 0.90, "weight": 0.97},
+            {"filename": "c.jpg", "status": "REJECTED", "yaw": 50.0, "pitch": 5.0,
+             "roll": 2.0, "confidence": 0.85, "weight": 0.0},
+            {"filename": "d.jpg", "status": "REJECTED", "yaw": 60.0, "pitch": 3.0,
+             "roll": -2.0, "confidence": 0.80, "weight": 0.0},
+            {"filename": "e.jpg", "status": "NO FACE", "yaw": 0.0, "pitch": 0.0,
+             "roll": 0.0, "confidence": 0.0, "weight": 0.0},
+        ]
+
+    def test_accepted_sorted_by_weight_descending(self):
+        """ACCEPTED images appear first, sorted by weight descending."""
+        from comfyui_imgtools.face_model_builder import format_quality_report
+
+        results = self._make_results()
+        report = format_quality_report(results, "/tmp/model.npz", 45.0, 30.0)
+        lines = report.strip().split("\n")
+        # Skip header and separator (lines 0, 1)
+        data_lines = [l for l in lines[2:] if l.strip() and "|" in l
+                       and "Total:" not in l and "Thresholds:" not in l
+                       and "Model saved" not in l]
+        # First two data lines should be ACCEPTED
+        assert "ACCEPTED" in data_lines[0]
+        assert "ACCEPTED" in data_lines[1]
+        # a.jpg (weight 0.99) before b.jpg (weight 0.97)
+        assert "a.jpg" in data_lines[0]
+        assert "b.jpg" in data_lines[1]
+
+    def test_rejected_sorted_by_yaw_ascending(self):
+        """REJECTED images sorted by |yaw| ascending after ACCEPTED."""
+        from comfyui_imgtools.face_model_builder import format_quality_report
+
+        results = self._make_results()
+        report = format_quality_report(results, "/tmp/model.npz", 45.0, 30.0)
+        lines = report.strip().split("\n")
+        data_lines = [l for l in lines[2:] if "REJECTED" in l]
+        # c.jpg (yaw=50) before d.jpg (yaw=60)
+        assert "c.jpg" in data_lines[0]
+        assert "d.jpg" in data_lines[1]
+
+    def test_no_face_shows_na(self):
+        """NO FACE rows show N/A for angle/confidence/weight columns."""
+        from comfyui_imgtools.face_model_builder import format_quality_report
+
+        results = self._make_results()
+        report = format_quality_report(results, "/tmp/model.npz", 45.0, 30.0)
+        lines = report.strip().split("\n")
+        no_face_lines = [l for l in lines if "NO FACE" in l]
+        assert len(no_face_lines) == 1
+        assert "N/A" in no_face_lines[0]
+
+    def test_summary_line_correct_counts(self):
+        """Summary line contains correct total/accepted/rejected/no face counts."""
+        from comfyui_imgtools.face_model_builder import format_quality_report
+
+        results = self._make_results()
+        report = format_quality_report(results, "/tmp/model.npz", 45.0, 30.0)
+        assert "Total: 5" in report
+        assert "Accepted: 2" in report
+        assert "Rejected: 2" in report
+        assert "No face: 1" in report
+
+    def test_last_line_contains_save_path(self):
+        """Last line shows the model save path."""
+        from comfyui_imgtools.face_model_builder import format_quality_report
+
+        results = self._make_results()
+        report = format_quality_report(results, "/tmp/my_model.npz", 45.0, 30.0)
+        last_line = report.strip().split("\n")[-1]
+        assert "/tmp/my_model.npz" in last_line
+
+
+# ---------------------------------------------------------------------------
+# TestPreviewImage
+# ---------------------------------------------------------------------------
+
+class TestPreviewImage:
+    """render_preview: 512x512 canvas with control points and contour."""
+
+    def _make_canonical_2d(self):
+        """Create synthetic (478, 2) canonical landmarks."""
+        rng = np.random.default_rng(42)
+        return rng.random((478, 2)).astype(np.float64)
+
+    def test_returns_correct_shape_and_dtype(self):
+        """Preview is (512, 512, 3) uint8."""
+        from comfyui_imgtools.face_model_builder import render_preview
+        from utils.morph_utils import MORPH_CONTROL_INDICES
+        from utils.face_mask import FACE_OVAL_INDICES
+
+        lm2d = self._make_canonical_2d()
+        result = render_preview(lm2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, 5)
+        assert result.shape == (512, 512, 3)
+        assert result.dtype == np.uint8
+
+    def test_header_has_white_pixels(self):
+        """Header area (top 30 rows) contains white text pixels."""
+        from comfyui_imgtools.face_model_builder import render_preview
+        from utils.morph_utils import MORPH_CONTROL_INDICES
+        from utils.face_mask import FACE_OVAL_INDICES
+
+        lm2d = self._make_canonical_2d()
+        result = render_preview(lm2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, 5)
+        header = result[:30, :, :]
+        assert np.any(header > 200), "Header area should have white text pixels"
+
+    def test_green_pixels_exist(self):
+        """Green pixels present (control points drawn)."""
+        from comfyui_imgtools.face_model_builder import render_preview
+        from utils.morph_utils import MORPH_CONTROL_INDICES
+        from utils.face_mask import FACE_OVAL_INDICES
+
+        lm2d = self._make_canonical_2d()
+        result = render_preview(lm2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, 5)
+        # Green: high G channel, low R and B
+        green_mask = (result[:, :, 1] > 200) & (result[:, :, 0] < 50) & (result[:, :, 2] < 50)
+        assert np.any(green_mask), "Should have green control point pixels"
+
+    def test_white_contour_below_header(self):
+        """White pixels exist below header area (contour lines)."""
+        from comfyui_imgtools.face_model_builder import render_preview
+        from utils.morph_utils import MORPH_CONTROL_INDICES
+        from utils.face_mask import FACE_OVAL_INDICES
+
+        lm2d = self._make_canonical_2d()
+        result = render_preview(lm2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, 5)
+        below_header = result[40:, :, :]
+        white_mask = (below_header[:, :, 0] > 200) & (below_header[:, :, 1] > 200) & (below_header[:, :, 2] > 200)
+        assert np.any(white_mask), "Should have white contour lines below header"
+
+
+# ---------------------------------------------------------------------------
+# TestNodeRegistration
+# ---------------------------------------------------------------------------
+
+class TestNodeRegistration:
+    """FaceModelBuilder: ComfyUI node registration and interface."""
+
+    def test_appears_in_node_class_mappings(self):
+        """FaceModelBuilder registered in NODE_CLASS_MAPPINGS."""
+        import comfyui_imgtools
+        assert "FaceModelBuilder" in comfyui_imgtools.NODE_CLASS_MAPPINGS
+
+    def test_input_types_has_directory(self):
+        """INPUT_TYPES has 'directory' in required."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+        inputs = FaceModelBuilder.INPUT_TYPES()
+        assert "directory" in inputs["required"]
+
+    def test_return_types(self):
+        """RETURN_TYPES includes FACE_MODEL, STRING, IMAGE."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+        assert FaceModelBuilder.RETURN_TYPES == ("FACE_MODEL", "STRING", "IMAGE")
