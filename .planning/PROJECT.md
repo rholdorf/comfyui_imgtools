@@ -29,7 +29,12 @@ Morph the source face shape to match the target face proportions so that downstr
 
 ### Active
 
-(None — v1.0 complete)
+- [ ] Versatile face model from multiple target images (different poses/angles)
+- [ ] New node to build model from directory of images
+- [ ] 3D landmark normalization (pitch/yaw/roll rotation to frontal, IPD-based scaling)
+- [ ] Averaged canonical landmarks and head dimensions as persistent model
+- [ ] Apply model diff to source respecting original pose and scale
+- [ ] Head size estimation with fallback to base model
 
 ### Out of Scope
 
@@ -68,5 +73,16 @@ Tech stack: MediaPipe (face landmarks), scikit-image (TPS warp, affine transform
 | Direct paste composite (no reverse warp) | Morphed face is already correct, just paste at crop_box | ✓ Good — simplest approach |
 | scikit-image only (no OpenCV) | Lighter dependency, Mac-friendly | ✓ Good |
 
+## Current Milestone: v1.1 Versatile Model
+
+**Goal:** Enable face shape morphing across diverse image compositions by building a canonical face model from multiple target images.
+
+**Target features:**
+- FaceModelBuilder node — processes directory of target images into averaged canonical model
+- 3D landmark normalization pipeline (pose removal + IPD scaling)
+- Persistent model file format
+- Pose-aware diff application to source images
+- Head size estimation and normalization
+
 ---
-*Last updated: 2026-03-11 after v1.0 milestone*
+*Last updated: 2026-03-11 after v1.1 milestone start*
