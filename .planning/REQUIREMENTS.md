@@ -9,9 +9,9 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 
 ### 3D Pose Normalization
 
-- [ ] **POSE-01**: System can extract pitch/yaw/roll from MediaPipe's 4x4 transformation matrix
-- [ ] **POSE-02**: System can frontalize 3D landmarks by de-rotating to canonical frontal pose
-- [ ] **POSE-03**: System can normalize landmarks by inter-pupil distance for cross-image comparability
+- [x] **POSE-01**: System can extract pitch/yaw/roll from MediaPipe's 4x4 transformation matrix
+- [x] **POSE-02**: System can frontalize 3D landmarks by de-rotating to canonical frontal pose
+- [x] **POSE-03**: System can normalize landmarks by inter-pupil distance for cross-image comparability
 - [ ] **POSE-04**: FaceModelMorph auto-attenuates morph strength for source faces with high yaw
 
 ### Model Building
@@ -63,9 +63,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| POSE-01 | Phase 5 | Pending |
-| POSE-02 | Phase 5 | Pending |
-| POSE-03 | Phase 5 | Pending |
+| POSE-01 | Phase 5 | Complete |
+| POSE-02 | Phase 5 | Complete |
+| POSE-03 | Phase 5 | Complete |
 | POSE-04 | Phase 8 | Pending |
 | MODL-01 | Phase 7 | Pending |
 | MODL-02 | Phase 7 | Pending |
