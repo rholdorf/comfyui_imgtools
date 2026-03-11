@@ -229,3 +229,82 @@ class TestConstants:
 
         assert LEFT_IRIS_CENTER == 468
         assert RIGHT_IRIS_CENTER == 473
+
+
+# ─── Integration: extract_landmarks with pose ────────────────────────────────
+
+
+class _FakeLandmark:
+    """Minimal landmark with x, y, z attributes."""
+
+    def __init__(self, x, y, z=0.0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+def _make_fake_result(num_faces=1, include_matrices=True, num_matrices=None):
+    """Build a fake FaceLandmarkerResult-like object.
+
+    Args:
+        num_faces: Number of faces with 478 landmarks each.
+        include_matrices: Whether to add facial_transformation_matrixes attr.
+        num_matrices: Number of matrices (defaults to num_faces if include_matrices).
+    """
+    if num_matrices is None:
+        num_matrices = num_faces
+
+    face_landmarks = []
+    for _ in range(num_faces):
+        face_lms = [_FakeLandmark(0.5, 0.5, 0.0) for _ in range(478)]
+        face_landmarks.append(face_lms)
+
+    class FakeResult:
+        pass
+
+    result = FakeResult()
+    result.face_landmarks = face_landmarks
+
+    if include_matrices:
+        result.facial_transformation_matrixes = [
+            np.eye(4) for _ in range(num_matrices)
+        ]
+    return result
+
+
+class TestExtractLandmarksPose:
+    """Integration tests: extract_landmarks produces pose key in face dict."""
+
+    def test_with_identity_matrix_pose_near_zero(self):
+        """Face dict has pose with pitch/yaw/roll near zero for identity matrix."""
+        from utils.landmarks import extract_landmarks
+
+        result = _make_fake_result(num_faces=1, include_matrices=True)
+        faces = extract_landmarks(result, 100, 100)
+        assert len(faces) == 1
+        pose = faces[0]["pose"]
+        assert pose is not None
+        assert abs(pose["pitch"]) < 1e-6
+        assert abs(pose["yaw"]) < 1e-6
+        assert abs(pose["roll"]) < 1e-6
+        assert "matrix" in pose
+
+    def test_without_matrices_pose_is_none(self):
+        """Face dict has pose=None when result lacks facial_transformation_matrixes."""
+        from utils.landmarks import extract_landmarks
+
+        result = _make_fake_result(num_faces=1, include_matrices=False)
+        faces = extract_landmarks(result, 100, 100)
+        assert len(faces) == 1
+        assert faces[0]["pose"] is None
+
+    def test_fewer_matrices_than_faces(self):
+        """Extra faces beyond available matrices get pose=None."""
+        from utils.landmarks import extract_landmarks
+
+        result = _make_fake_result(num_faces=3, include_matrices=True, num_matrices=1)
+        faces = extract_landmarks(result, 100, 100)
+        assert len(faces) == 3
+        assert faces[0]["pose"] is not None  # has matrix
+        assert faces[1]["pose"] is None      # no matrix
+        assert faces[2]["pose"] is None      # no matrix

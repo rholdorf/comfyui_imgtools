@@ -1,5 +1,7 @@
 import numpy as np
 
+from utils.pose_utils import extract_pose_angles
+
 
 def extract_landmarks(result, img_width, img_height):
     """Extract landmark data from a FaceLandmarkerResult.
@@ -13,22 +15,32 @@ def extract_landmarks(result, img_width, img_height):
         List of face dicts, each containing:
             - "landmarks": np.array of shape (478, 2) with pixel coordinates.
             - "landmarks_3d": np.array of shape (478, 3) with normalized coords.
+            - "pose": dict with pitch/yaw/roll/matrix from the transformation
+              matrix, or None if the matrix is unavailable.
         Returns an empty list if no faces were detected.
     """
     if not result.face_landmarks:
         return []
 
     faces = []
-    for face_lms in result.face_landmarks:
+    for i, face_lms in enumerate(result.face_landmarks):
         landmarks_px = np.array(
             [[lm.x * img_width, lm.y * img_height] for lm in face_lms]
         )
         landmarks_3d = np.array(
             [[lm.x, lm.y, lm.z] for lm in face_lms]
         )
+
+        pose = None
+        if (hasattr(result, 'facial_transformation_matrixes') and
+                result.facial_transformation_matrixes and
+                i < len(result.facial_transformation_matrixes)):
+            pose = extract_pose_angles(result.facial_transformation_matrixes[i])
+
         faces.append({
             "landmarks": landmarks_px,
             "landmarks_3d": landmarks_3d,
+            "pose": pose,
         })
     return faces
 
