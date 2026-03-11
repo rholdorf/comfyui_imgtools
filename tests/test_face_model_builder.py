@@ -101,57 +101,25 @@ class TestScanImages:
 class TestProcessImage:
     """process_image: per-image face detection and pose filtering."""
 
-    def _make_mock_landmarker(self, face=None):
-        """Create a mock landmarker that returns a synthetic face result."""
-        mock_lm = MagicMock()
-
-        if face is None:
-            # No face detected
-            mock_result = MagicMock()
-            mock_result.face_landmarks = []
-            mock_lm.detect.return_value = mock_result
-            return mock_lm
-
-        # Build a result with one face
-        mock_result = MagicMock()
-
-        # face_landmarks: list of list of landmark objects
-        lm_objs = []
-        for i in range(478):
-            lm = MagicMock()
-            lm.x = float(face["landmarks_3d"][i, 0])
-            lm.y = float(face["landmarks_3d"][i, 1])
-            lm.z = float(face["landmarks_3d"][i, 2])
-            lm_objs.append(lm)
-        mock_result.face_landmarks = [lm_objs]
-
-        # facial_transformation_matrixes
-        if face["pose"] is not None:
-            mock_result.facial_transformation_matrixes = [face["pose"]["matrix"]]
-        else:
-            mock_result.facial_transformation_matrixes = []
-
-        mock_lm.detect.return_value = mock_result
-        return mock_lm
-
+    @patch("utils.model_builder.extract_landmarks")
     @patch("utils.model_builder.mp")
     @patch("utils.model_builder.Image")
-    def test_accepted_face(self, mock_pil, mock_mp, tmp_path):
+    def test_accepted_face(self, mock_pil, mock_mp, mock_extract, tmp_path):
         """Face with mild pose is accepted with correct weight."""
         from utils.model_builder import process_image
 
         face = _make_synthetic_face(yaw=10.0, pitch=5.0)
-        mock_lm = self._make_mock_landmarker(face)
+        mock_extract.return_value = [face]
 
-        # Mock PIL Image.open
         mock_img = MagicMock()
         mock_img.convert.return_value = mock_img
-        mock_img_np = np.zeros((100, 100, 3), dtype=np.uint8)
-        mock_img.__array__ = lambda self: mock_img_np
+        mock_img.__array__ = lambda s, dtype=None: np.zeros((100, 100, 3), dtype=np.uint8)
         mock_pil.open.return_value = mock_img
         mock_mp.Image.return_value = MagicMock()
 
-        # Create a dummy image file
+        mock_lm = MagicMock()
+        mock_lm.detect.return_value = MagicMock()
+
         img_path = tmp_path / "face.jpg"
         img_path.write_bytes(b"fake")
 
@@ -161,19 +129,24 @@ class TestProcessImage:
         assert abs(result["weight"] - expected_weight) < 1e-6
         assert result["normalized_3d"].shape == (478, 3)
 
+    @patch("utils.model_builder.extract_landmarks")
     @patch("utils.model_builder.mp")
     @patch("utils.model_builder.Image")
-    def test_rejected_extreme_yaw(self, mock_pil, mock_mp, tmp_path):
+    def test_rejected_extreme_yaw(self, mock_pil, mock_mp, mock_extract, tmp_path):
         """Face with |yaw| > 45 is rejected."""
         from utils.model_builder import process_image
 
         face = _make_synthetic_face(yaw=50.0, pitch=0.0)
-        mock_lm = self._make_mock_landmarker(face)
+        mock_extract.return_value = [face]
 
         mock_img = MagicMock()
         mock_img.convert.return_value = mock_img
+        mock_img.__array__ = lambda s, dtype=None: np.zeros((100, 100, 3), dtype=np.uint8)
         mock_pil.open.return_value = mock_img
         mock_mp.Image.return_value = MagicMock()
+
+        mock_lm = MagicMock()
+        mock_lm.detect.return_value = MagicMock()
 
         img_path = tmp_path / "face.jpg"
         img_path.write_bytes(b"fake")
@@ -181,19 +154,24 @@ class TestProcessImage:
         result = process_image(img_path, mock_lm)
         assert result["status"] == "REJECTED"
 
+    @patch("utils.model_builder.extract_landmarks")
     @patch("utils.model_builder.mp")
     @patch("utils.model_builder.Image")
-    def test_rejected_extreme_pitch(self, mock_pil, mock_mp, tmp_path):
+    def test_rejected_extreme_pitch(self, mock_pil, mock_mp, mock_extract, tmp_path):
         """Face with |pitch| > 30 is rejected."""
         from utils.model_builder import process_image
 
         face = _make_synthetic_face(yaw=0.0, pitch=35.0)
-        mock_lm = self._make_mock_landmarker(face)
+        mock_extract.return_value = [face]
 
         mock_img = MagicMock()
         mock_img.convert.return_value = mock_img
+        mock_img.__array__ = lambda s, dtype=None: np.zeros((100, 100, 3), dtype=np.uint8)
         mock_pil.open.return_value = mock_img
         mock_mp.Image.return_value = MagicMock()
+
+        mock_lm = MagicMock()
+        mock_lm.detect.return_value = MagicMock()
 
         img_path = tmp_path / "face.jpg"
         img_path.write_bytes(b"fake")
@@ -201,18 +179,23 @@ class TestProcessImage:
         result = process_image(img_path, mock_lm)
         assert result["status"] == "REJECTED"
 
+    @patch("utils.model_builder.extract_landmarks")
     @patch("utils.model_builder.mp")
     @patch("utils.model_builder.Image")
-    def test_no_face_detected(self, mock_pil, mock_mp, tmp_path):
+    def test_no_face_detected(self, mock_pil, mock_mp, mock_extract, tmp_path):
         """Image with no face returns NO FACE status."""
         from utils.model_builder import process_image
 
-        mock_lm = self._make_mock_landmarker(face=None)
+        mock_extract.return_value = []
 
         mock_img = MagicMock()
         mock_img.convert.return_value = mock_img
+        mock_img.__array__ = lambda s, dtype=None: np.zeros((100, 100, 3), dtype=np.uint8)
         mock_pil.open.return_value = mock_img
         mock_mp.Image.return_value = MagicMock()
+
+        mock_lm = MagicMock()
+        mock_lm.detect.return_value = MagicMock()
 
         img_path = tmp_path / "noface.jpg"
         img_path.write_bytes(b"fake")
@@ -220,19 +203,24 @@ class TestProcessImage:
         result = process_image(img_path, mock_lm)
         assert result["status"] == "NO FACE"
 
+    @patch("utils.model_builder.extract_landmarks")
     @patch("utils.model_builder.mp")
     @patch("utils.model_builder.Image")
-    def test_no_pose_fallback(self, mock_pil, mock_mp, tmp_path):
+    def test_no_pose_fallback(self, mock_pil, mock_mp, mock_extract, tmp_path):
         """Face with pose=None falls back to weight=1.0, no frontalization."""
         from utils.model_builder import process_image
 
         face = _make_synthetic_face(has_pose=False)
-        mock_lm = self._make_mock_landmarker(face)
+        mock_extract.return_value = [face]
 
         mock_img = MagicMock()
         mock_img.convert.return_value = mock_img
+        mock_img.__array__ = lambda s, dtype=None: np.zeros((100, 100, 3), dtype=np.uint8)
         mock_pil.open.return_value = mock_img
         mock_mp.Image.return_value = MagicMock()
+
+        mock_lm = MagicMock()
+        mock_lm.detect.return_value = MagicMock()
 
         img_path = tmp_path / "face.jpg"
         img_path.write_bytes(b"fake")
