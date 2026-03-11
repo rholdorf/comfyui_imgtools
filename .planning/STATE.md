@@ -1,19 +1,3 @@
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: versatile-model
-status: in_progress
-stopped_at: Defining requirements
-last_updated: "2026-03-11"
-last_activity: 2026-03-11 -- Milestone v1.1 started
-progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
----
-
 # Project State
 
 ## Project Reference
@@ -21,41 +5,32 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-11)
 
 **Core value:** Morph source face shape to match target face proportions so downstream face swap produces natural results
-**Current focus:** v1.1 Versatile Model — defining requirements
+**Current focus:** Phase 5 - 3D Pose Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-11 -- Milestone v1.1 started
+Phase: 5 of 9 (3D Pose Foundation)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-11 — Roadmap created for v1.1 Versatile Model milestone
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░░░░░░░░░░░] 44% (8/~18 plans, v1.0 complete, v1.1 starting)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2min
-- Total execution time: 0.03 hours
+- Total plans completed: 8 (v1.0)
+- Average duration: ~3 min/plan
+- Total execution time: ~0.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-environment-and-detection | 1 | 2min | 2min |
-
-**Recent Trend:**
-- Last 5 plans: 01-01 (2min)
-- Trend: Starting
-
-*Updated after each plan completion*
-| Phase 01 P02 | 2min | 2 tasks | 3 files |
-| Phase 02 P01 | 4min | 2 tasks | 5 files |
-| Phase 02 P02 | 3min | 2 tasks | 3 files |
-| Phase 03 P01 | 6min | 2 tasks | 4 files |
-| Phase 03 P02 | 4min | 2 tasks | 3 files |
-| Phase 04 P01 | 4min | 3 tasks | 4 files |
+| 1. Environment and Detection | 2 | ~4min | ~2min |
+| 2. Face Crop and Alignment | 2 | ~7min | ~3.5min |
+| 3. Face Shape Morphing | 2 | ~10min | ~5min |
+| 4. Compositing and Integration | 2 | ~8min | ~4min |
 
 ## Accumulated Context
 
@@ -64,21 +39,10 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Roadmap]: 4-phase pipeline following detection -> crop/align -> morph -> composite dependency chain
-- [Research]: Python 3.14/3.13 incompatibility with MediaPipe is primary risk -- must verify/resolve in Phase 1
-- [01-01]: Added pyproject.toml with pythonpath config for pytest module resolution
-- [01-01]: Landmarker caching includes parameter comparison for confidence thresholds
-- [Phase 01-02]: Used try/except conditional import for graceful degradation when mediapipe missing
-- [Phase 02]: Used abs(dx) in arctan2 angle calculation to handle MediaPipe left/right eye convention
-- [Phase 02]: Inlined FACE_OVAL_INDICES in conftest fixtures to avoid cross-module TDD dependency
-- [Phase 02]: Used package-qualified imports in tests to match existing face_detection pattern
-- [Phase 02]: Gated FaceCropAlign behind same _face_nodes_available check as FaceDetect
-- [Phase 03]: Added near-duplicate point deduplication before TPS estimation for numerical stability
-- [Phase 03]: Generate feathered mask from morphed landmark positions per Research pitfall 6
-- [Phase 03]: Eye-corner coherence testing uses normalized space to account for IED normalization scaling
-- [Phase 04]: Reverse warp passes transform directly as inverse_map (not .inverse) for correct reverse direction
-- [Phase 04]: 5px crop margin expansion clamped to image bounds for interpolation safety
-- [Phase 04]: Alpha blend in original image space after reverse warp, not in crop space
+- [v1.1]: FaceModelMorph is separate node from FaceShapeMorph (not overloaded)
+- [v1.1]: Use MediaPipe 4x4 transformation matrix for pose (not solvePnP)
+- [v1.1]: No new dependencies — SciPy Rotation already available as transitive dep
+- [v1.1]: Additive architecture — new modules only, minimal changes to existing code
 
 ### Pending Todos
 
@@ -86,10 +50,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- [RESOLVED] MediaPipe 0.10.18 works in ComfyUI conda env (Python 3.12.7). No version conflict.
+- [Phase 8]: Denormalization math (canonical -> pixel space) is highest risk; needs synthetic data validation before implementation
 
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: All plans complete
-Resume file: none
+Stopped at: Roadmap created for v1.1, ready to plan Phase 5
+Resume file: None

@@ -63,26 +63,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| POSE-01 | — | Pending |
-| POSE-02 | — | Pending |
-| POSE-03 | — | Pending |
-| POSE-04 | — | Pending |
-| MODL-01 | — | Pending |
-| MODL-02 | — | Pending |
-| MODL-03 | — | Pending |
-| MODL-04 | — | Pending |
-| MODL-05 | — | Pending |
-| MRPH-01 | — | Pending |
-| MRPH-02 | — | Pending |
-| MRPH-03 | — | Pending |
-| INTG-01 | — | Pending |
-| INTG-02 | — | Pending |
+| POSE-01 | Phase 5 | Pending |
+| POSE-02 | Phase 5 | Pending |
+| POSE-03 | Phase 5 | Pending |
+| POSE-04 | Phase 8 | Pending |
+| MODL-01 | Phase 7 | Pending |
+| MODL-02 | Phase 7 | Pending |
+| MODL-03 | Phase 6 | Pending |
+| MODL-04 | Phase 7 | Pending |
+| MODL-05 | Phase 7 | Pending |
+| MRPH-01 | Phase 8 | Pending |
+| MRPH-02 | Phase 8 | Pending |
+| MRPH-03 | Phase 8 | Pending |
+| INTG-01 | Phase 9 | Pending |
+| INTG-02 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 ⚠️
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-11 after initial definition*
+*Last updated: 2026-03-11 after roadmap creation*
