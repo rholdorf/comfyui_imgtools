@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Versatile Model
-status: completed
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-11T23:13:09.692Z"
-last_activity: 2026-03-11 — Completed 06-01 face model NPZ persistence
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-11T23:33:44.431Z"
+last_activity: 2026-03-11 — Completed 07-01 model builder pipeline
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
-  percent: 60
+  total_plans: 5
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-11)
 
 ## Current Position
 
-Phase: 6 of 9 (Model Persistence) -- COMPLETE
-Plan: 1 of 1 in current phase
-Status: Phase 6 Complete
-Last activity: 2026-03-11 — Completed 06-01 face model NPZ persistence
+Phase: 7 of 9 (FaceModelBuilder Node)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: Executing Phase 7
+Last activity: 2026-03-11 — Completed 07-01 model builder pipeline
 
-Progress: [██████----] 60% (3/5 v1.1 plans)
+Progress: [████████░░] 80% (4/5 v1.1 plans)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [██████----] 60% (3/5 v1.1 plans)
 | Phase 05 P01 | 2min | 2 tasks | 2 files |
 | Phase 05 P02 | 2min | 2 tasks | 4 files |
 | Phase 06 P01 | 2min | 2 tasks | 2 files |
+| Phase 07 P01 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 05]: pose=None for faces without transformation matrix (graceful degradation)
 - [Phase 06]: NPZ schema stores head_dimensions as flat (3,) array, reconstructed to dict on load
 - [Phase 06]: allow_pickle=False always for security in np.load
+- [Phase 07]: MODEL_VERSION bumped to 2 for breaking schema change (478,2->478,3 stddev)
+- [Phase 07]: Mock extract_landmarks at module level for pipeline unit tests (avoids real MediaPipe model)
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T23:13:09.690Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-face-model-builder/07-CONTEXT.md
+Last session: 2026-03-11T23:33:44.430Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
