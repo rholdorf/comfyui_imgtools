@@ -38,11 +38,11 @@
   2. Given 3D landmarks from a rotated face, system produces frontalized landmarks that match the same face detected at frontal pose (within tolerance)
   3. Given landmarks from two faces of different sizes, IPD-normalized landmarks have inter-pupil distance of 1.0 and are directly comparable
   4. Existing v1.0 pipeline remains fully functional (123 tests pass unchanged)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — TDD: pose_utils.py with pose extraction, frontalization, and IPD normalization
+- [ ] 05-02-PLAN.md — Integration: wire pose data into MediaPipe helper and face dict
 
 ### Phase 6: Model Persistence
 **Goal**: Face models can be saved to disk and loaded back with full fidelity, enabling persistent reuse across sessions
@@ -114,7 +114,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 2. Face Crop and Alignment | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 3. Face Shape Morphing | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
-| 5. 3D Pose Foundation | v1.1 | 0/? | Not started | - |
+| 5. 3D Pose Foundation | v1.1 | 0/2 | Planning | - |
 | 6. Model Persistence | v1.1 | 0/? | Not started | - |
 | 7. FaceModelBuilder Node | v1.1 | 0/? | Not started | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
