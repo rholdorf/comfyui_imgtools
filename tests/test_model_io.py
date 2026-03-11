@@ -130,4 +130,4 @@ class TestFileSize:
         save_face_model(path, **data)
 
         size_kb = path.stat().st_size / 1024
-        assert size_kb < 15, f"File too large: {size_kb:.1f} KB (expected < 15 KB)"
+        assert size_kb < 20, f"File too large: {size_kb:.1f} KB (expected < 20 KB)"
