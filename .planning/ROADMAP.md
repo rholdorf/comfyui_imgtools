@@ -52,10 +52,10 @@ Plans:
   1. A .facemodel.npz file (~6 KB) stores canonical landmarks (478x2), head dimensions, control point indices, per-landmark stddev, and version metadata
   2. A model saved and loaded back produces identical data (dtype, shape, values) confirmed by round-trip test
   3. Loading a file with missing fields or wrong version raises a clear error message (not a silent failure or cryptic crash)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 06-01: TBD
+- [ ] 06-01-PLAN.md — TDD: model_io.py with save/load and round-trip fidelity tests
 
 ### Phase 7: FaceModelBuilder Node
 **Goal**: User can build a canonical face model from a directory of target images, with quality feedback on which images contributed
@@ -115,7 +115,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 3. Face Shape Morphing | v1.0 | 2/2 | Complete | 2026-03-10 |
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
-| 6. Model Persistence | v1.1 | 0/? | Not started | - |
+| 6. Model Persistence | v1.1 | 0/1 | In progress | - |
 | 7. FaceModelBuilder Node | v1.1 | 0/? | Not started | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
