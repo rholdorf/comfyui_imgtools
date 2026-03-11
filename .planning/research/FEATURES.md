@@ -1,86 +1,143 @@
-# Feature Landscape
+# Feature Landscape: v1.1 Versatile Model
 
-**Domain:** Face shape morphing / pre-processing for face swap workflows in ComfyUI
-**Researched:** 2026-03-10
+**Domain:** Multi-image canonical face model building, 3D landmark normalization, pose-aware morph application
+**Researched:** 2026-03-11
+**Builds on:** v1.0 (FaceDetect, FaceCropAlign, FaceShapeMorph, FaceComposite -- all shipped)
 
 ## Table Stakes
 
-Features users expect. Missing = product feels incomplete.
+Features that make v1.1 actually useful. Without these, multi-image model building is incomplete.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Face landmark detection | Foundation of everything -- can't morph without landmarks | Med | MediaPipe Face Landmarker, 478 points, CPU-native |
-| Face crop & alignment | Morphing on aligned faces produces far better results; tilted faces break warping | Med | Rotate to upright based on eye positions, crop bounding box with margin |
-| Face shape warping | Core value proposition -- deform source face to match target proportions | High | TPS warp using landmark subsets (jawline, forehead, cheeks) |
-| Face compositing back | Morphed face must go back into the original image seamlessly | Med | Inverse rotation, feathered mask blending at edges |
-| Strength slider (0-1) | Users need control over morph intensity; full match can look unnatural | Low | Linear interpolation between source and target landmark positions |
-| Multi-face support | Images often have multiple faces; user needs to pick which one | Low | Face index parameter (integer), MediaPipe returns multiple faces |
-| Mask output | Users need masks for downstream compositing or manual touchup | Low | Output soft mask of face region alongside processed image |
-| Mac / Apple Silicon compatibility | Project constraint; FaceShaper doesn't reliably work on Mac | Med | All deps must have macOS ARM64 wheels; no CUDA-only operations |
+| Feature | Why Expected | Complexity | Dependencies on v1.0 |
+|---------|--------------|------------|----------------------|
+| FaceModelBuilder node (multi-image input) | Core value of v1.1 -- build a canonical face from N target images instead of one. Without this, user is limited to single-image-to-image morph. | High | Reuses FaceDetect internally for landmark extraction |
+| 3D pose extraction from MediaPipe matrix | Required to normalize away head pose before averaging. Enable `output_facial_transformation_matrixes=True` to get 4x4 matrix per face. | Low | One-line config change to `get_landmarker()` |
+| Pose-normalized (frontalized) landmarks | Each image's landmarks must be de-rotated to canonical frontal view before averaging. Uses inverse of MediaPipe's 4x4 matrix via scipy Rotation. | Med | New `pose_utils.py`; uses scipy.spatial.transform.Rotation (already installed) |
+| IPD-based scale normalization | Faces at different distances/resolutions must be size-normalized. Inter-pupil distance (IPD) is the standard reference. | Low | `normalize_landmarks()` in `morph_utils.py` already does this for 2D. Extend to 3D. |
+| Weighted averaging of normalized landmarks | Average the frontalized, IPD-normalized landmarks across N images. Weight by cos(yaw)*cos(pitch)*confidence for quality. | Med | Straightforward numpy weighted mean |
+| Persistent model file format (.npz) | Save canonical model to disk so it can be reloaded without reprocessing. Users build once, morph many. ~6KB per model. | Low | `numpy.savez_compressed` / `numpy.load` with `allow_pickle=False` |
+| Pose-aware diff application | When applying model shape to source, delta must respect source's current pose. Cannot blindly apply frontal diff to 3/4 view. | High | Modifies `compute_morph_warp()` in `morph_utils.py` |
+| Head size estimation from model | Canonical model carries average head dimensions (IPD-relative) so FaceComposite can scale correctly. | Low | Model stores average; passed via align_data |
+| Directory/batch image input | User provides folder path or image batch. Node iterates, detects, builds model. | Med | Uses pathlib.Path.glob() for directory listing |
 
 ## Differentiators
 
-Features that set this apart from ComfyUI_FaceShaper and similar.
+Features beyond basic functionality that add real quality.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Split node architecture | Inspect intermediates, swap individual steps, compose with other nodes. FaceShaper V1 was monolithic. | Low (design choice) | Three nodes: FaceCropAlign, FaceShapeMorph, FaceComposite |
-| Mac-first / Apple Silicon native | FaceShaper has no explicit Mac support; this project targets Mac first | Low | MediaPipe + scikit-image both have ARM64 wheels |
-| No non-commercial deps | FaceShaper's Insightface has license restrictions | Low | MediaPipe only (Apache 2.0) |
-| Landmark debug visualization | Visual overlay of detected landmarks + warp vectors for debugging | Low | Optional output showing landmarks on face |
-| Region-selective morphing | Morph only jaw, forehead, or face width -- not all-or-nothing | Med | Region weights: jaw (0-1), forehead (0-1), cheeks (0-1) |
-| Full image + cropped face dual output | Output both composited result AND isolated face from each node | Low | Enables inspection and downstream flexibility |
+| Automatic pose-based rejection | Reject images where face yaw > threshold (e.g., 45-60 deg). Extreme poses have unreliable landmarks. | Low | Threshold on Euler yaw from 4x4 matrix decomposition |
+| Per-image confidence weighting | Weight near-frontal images higher when averaging. Formula: `cos(yaw) * cos(pitch) * detection_confidence`. | Low | Simple formula, big quality gain over unweighted mean |
+| Model preview/visualization | Output landmark plot showing canonical shape. Verify model quality before applying. | Low | Reuse existing `draw_landmarks_on_image` on blank canvas |
+| Pose quality report | Output metadata: which images used/rejected, per-image yaw/pitch/roll, confidence. | Low | Structured dict output for debugging |
+| FaceModelMorph as separate node | Dedicated node for model-based morphing (cleaner UX than overloading FaceShapeMorph). | Med | Alternative to modifying FaceShapeMorph; see Architecture discussion |
 
 ## Anti-Features
 
-Features to explicitly NOT build.
+Features to explicitly NOT build in v1.1.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Face swap | ReActor and others handle this; duplicating adds massive scope | Output morphed faces that feed into existing swap nodes |
-| Video/real-time processing | Temporal consistency, optical flow -- massive complexity | Process individual frames; users use ComfyUI video nodes |
-| Model training/fine-tuning | Unnecessary; MediaPipe pre-trained model is sufficient | Use pre-trained face_landmarker.task as-is |
-| 3D face reconstruction | Overkill for proportion matching; heavy deps, GPU needs | 2D landmark-based TPS warping is sufficient |
-| InsightFace as detector | Non-commercial license, CUDA-preferring, heavy dependency | MediaPipe as sole detector |
-| Color/lighting correction | Separate concern from geometry; post-swap problem | Let downstream nodes handle color |
-| Animated morph sequences | Different product entirely (morph video generation) | Single-shot warp: source geometry to target geometry |
+| Full 3D face reconstruction | Overkill. Need 3D only for pose removal, not rendering. | Use MediaPipe's 4x4 matrix for pose; pure linear algebra, no 3D renderer. |
+| OpenCV dependency for solvePnP | Project constraint: no OpenCV. Unnecessary because MediaPipe provides the matrix. | Enable `output_facial_transformation_matrixes=True` -- done. |
+| Neural network pose estimator (6DRepNet, WHENet) | Extra model, GPU overhead, complexity. | MediaPipe's matrix gives pitch/yaw/roll with no extra model. |
+| Face identity clustering | Multi-person directory is a face recognition problem (InsightFace territory). | Require single-person input or user-specified face index. Document limitation. |
+| Blendshape/expression normalization | Full solution needs blendshape decomposition -- different problem domain. | Document: recommend neutral-expression photos. Outlier rejection handles extreme cases. |
+| Incremental model building | Adding images to existing model without reprocessing is nice but adds complexity. | Ship rebuild-from-scratch first. Store per-image data in npz for future incremental support. |
+| Region-selective morphing | Not critical for v1.1; multi-image model is the priority. | Keep as v1.2 candidate. |
 
 ## Feature Dependencies
 
 ```
-Face Landmark Detection (MediaPipe)
-  |
-  v
-Face Crop & Align -----> outputs: cropped face, alignment transform, mask
-  |
-  v
-Face Shape Morph ------> outputs: warped face, warp field
-  |                      (requires source AND target landmarks)
-  v
-Face Composite --------> outputs: full image with warped face composited back
-                         (requires original image, alignment transform, mask)
+Existing v1.0 Pipeline (unchanged):
+  FaceDetect -> FaceCropAlign -> FaceShapeMorph -> FaceComposite
+
+New v1.1 Model Building Pipeline:
+
+  [Directory of images]
+         |
+         v
+  FaceModelBuilder
+    - For each image:
+      1. FaceDetect (reuse existing node logic)
+      2. Get facial_transformation_matrix (enable flag in MediaPipe options)
+      3. Extract pose (pitch/yaw/roll from 4x4 matrix via scipy.Rotation)
+      4. Reject if extreme pose or low confidence
+      5. De-rotate landmarks to frontal (inverse rotation via scipy.Rotation.inv())
+      6. IPD-normalize (scale so IED = 1.0)
+    - Weighted average all normalized landmarks
+    - Store: canonical_landmarks, avg_head_dimensions, metadata
+         |
+         v
+  FACE_MODEL output (+ save to .facemodel.npz)
+
+New v1.1 Morph Pipeline:
+
+  FaceDetect (source image, with transformation matrix)
+         |
+         v
+  FaceCropAlign (source image)
+         |
+         v
+  FaceModelMorph  <---- FACE_MODEL input
+    - Estimate source pose from its transformation_matrix
+    - Normalize source landmarks to canonical space
+    - Compute shape delta: canonical_model - source_normalized
+    - Scale delta back to source pixel space (multiply by source IPD)
+    - Apply via TPS (reuse existing warp infrastructure)
+         |
+         v
+  FaceComposite (unchanged from v1.0)
 ```
 
-Critical path: Detection -> Crop/Align -> Morph -> Composite. Must ship together.
+Key dependency chain for implementation:
+```
+Enable transformation matrix in MediaPipe (foundation)
+  -> pose_utils.py: extract Euler angles, de-rotate landmarks
+    -> model_io.py: NPZ save/load
+      -> FaceModelBuilder node (uses pose_utils + model_io)
+    -> Pose-aware diff in morph_utils.py (uses pose_utils)
+      -> FaceModelMorph node (uses diff application)
+```
 
-Independent additions: Landmark visualization, region-selective weights, Poisson blending toggle.
+## MVP Recommendation for v1.1
 
-## MVP Recommendation
+Prioritize (minimum viable multi-image model):
 
-Prioritize (ship together as minimum viable pipeline):
-1. **Face Crop & Align node** -- detect landmarks, rotate to upright, crop with padding
-2. **Face Shape Morph node** -- TPS warp between landmark sets with strength slider
-3. **Face Composite node** -- paste back with feathered mask, output full image + mask
-4. **Face index selection** -- integer input on crop node (trivial)
+1. **Enable transformation matrix output** -- One-line change to `get_landmarker()`. Foundation for everything.
 
-Defer:
-- **Region-selective morphing**: Ship full-face morph first; add per-region weights later
-- **Landmark visualization**: Debugging aid; add when tuning morph quality
-- **Poisson blending**: Feathered mask is simpler and predictable for V1
+2. **Pose utilities (pose_utils.py)** -- Extract Euler angles from 4x4 matrix via scipy.Rotation. De-rotate landmarks to frontal via inverse. Core math module.
+
+3. **Model I/O (model_io.py)** -- Save/load canonical model as .npz. Straightforward but must be defined early so model format is stable.
+
+4. **FaceModelBuilder node** -- Process directory, detect, normalize, average, save. Main new user-facing node.
+
+5. **FaceModelMorph node** -- Accept FACE_MODEL, compute pose-aware delta, apply via TPS. Main integration with existing pipeline.
+
+6. **Head size in model** -- Store average head dimensions. Pass through to FaceComposite.
+
+Defer to v1.1.1 or v1.2:
+- **Incremental model building**: Rebuild-from-scratch first.
+- **Model preview/visualization**: Nice to have but not blocking.
+- **Per-image confidence weighting**: Start with cos(yaw)*cos(pitch) weighting. Statistical weighting later.
+
+## Complexity Assessment
+
+| Feature | Estimated Effort | Risk Level | Notes |
+|---------|-----------------|------------|-------|
+| Enable transformation matrix output | Tiny (config change) | Low | One boolean in `get_landmarker()` |
+| Pose decomposition (4x4 matrix -> Euler) | Small (utility function) | Low | scipy.Rotation handles this cleanly |
+| Landmark de-rotation to frontal | Small (matrix multiply) | Low | `pts_3d @ R_inv.T` -- verified working |
+| Model I/O (npz save/load) | Small | Low | Verified round-trip at ~6KB |
+| FaceModelBuilder node | Medium (orchestration) | Medium | Mostly wiring existing pieces together |
+| Pose-aware diff application | High (core algorithm) | High | Hardest part -- delta must respect source pose |
+| FaceModelMorph node | Medium (new node) | Low | Thin wrapper once diff application works |
 
 ## Sources
 
-- [ComfyUI_FaceShaper](https://github.com/fssorc/ComfyUI_FaceShaper) -- competitor analysis
-- [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) -- 478 landmarks
-- [LearnOpenCV Face Morph](https://learnopencv.com/face-morph-using-opencv-cpp-python/) -- standard pipeline reference
-- [OpenCV seamlessClone](https://docs.opencv.org/4.x/df/da0/group__photo__clone.html) -- Poisson blending reference
+- MediaPipe `output_facial_transformation_matrixes`: verified via `help(vision.FaceLandmarkerOptions)` on mediapipe 0.10.18 (HIGH confidence)
+- MediaPipe `facial_transformation_matrixes: List[numpy.ndarray]`: verified via `inspect.getmembers()` (HIGH confidence)
+- scipy.spatial.transform.Rotation: verified round-trip Euler decomposition with scipy 1.12.0 (HIGH confidence)
+- numpy.savez_compressed: verified round-trip at 6KB with numpy 1.26.4 (HIGH confidence)
+- [MediaPipe 3D Face Transform](https://developers.googleblog.com/mediapipe-3d-face-transform/) -- Procrustes analysis for pose matrix
+- [SciPy Rotation docs](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html)

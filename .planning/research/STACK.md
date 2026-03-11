@@ -1,122 +1,179 @@
 # Technology Stack
 
-**Project:** comfyui_imgtools - Face Shape Morphing Milestone
-**Researched:** 2026-03-10
+**Project:** comfyui_imgtools v1.1 — Versatile Model
+**Researched:** 2026-03-11
 
-## Recommended Stack
+## Key Finding: No New Dependencies Required
 
-### Face Detection & Landmarks
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| mediapipe | 0.10.32 | 478-point face landmark detection | Only viable option: 478 3D landmarks, runs on CPU, native macOS ARM64 wheels, no CUDA dependency. The new Face Landmarker task API (not legacy Face Mesh) provides blendshapes and transformation matrices as bonuses. | HIGH |
+The v1.1 features (3D landmark normalization, multi-image averaging, persistent model format, pose-aware diff application) can be built entirely with the existing dependency stack. Zero new packages to install, test, or maintain.
 
-### Image Warping / Morphing
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| scikit-image | 0.26.0 | Thin Plate Spline warping | `ThinPlateSplineTransform.from_estimate()` -- clean API, smooth non-linear deformation, built on scipy/numpy (already ComfyUI deps). TPS produces smoother results than piecewise affine for face morphing. Preferred over OpenCV's TPS because skimage's API is cleaner and doesn't require opencv-contrib. | HIGH |
-| scipy | (ComfyUI dep) | Spatial transforms, interpolation | Already a ComfyUI dependency. Used internally by scikit-image TPS and useful for Delaunay triangulation fallback. | HIGH |
+## Existing Stack (Already Installed, Verified)
 
-### Image Processing & Compositing
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| opencv-python | (ComfyUI dep) | Image manipulation, color space conversion, Gaussian blur for feathered masks | Standard image processing. Use `opencv-python` (not `opencv-contrib-python`) -- TPS comes from scikit-image instead, keeping deps lighter. | HIGH |
-| numpy | >=1.25.0 | Tensor/array operations | Already a ComfyUI dependency. All image data flows through numpy arrays. | HIGH |
-| Pillow | (ComfyUI dep) | Image I/O fallback | Already a ComfyUI dependency. Not primary -- most work stays in numpy/torch tensors. | HIGH |
+### Core (unchanged from v1.0)
 
-### ML Runtime
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| torch | (ComfyUI dep) | Tensor format compatibility, MPS backend | ComfyUI IMAGE tensors are `[batch, H, W, C]` torch tensors. Convert to numpy for processing, back to torch for output. Already installed. | HIGH |
+| Technology | Version | Purpose | v1.1 Role |
+|------------|---------|---------|-----------|
+| MediaPipe | 0.10.18 | Face landmark detection | **NEW:** `facial_transformation_matrixes` for 3D pose |
+| scikit-image | 0.24.0 | TPS warp, affine transforms | Unchanged -- warp application |
+| NumPy | 1.26.4 | Array math | **NEW:** `.npz` for model file format, 3D landmark math |
+| SciPy | 1.12.0 | (transitive via scikit-image) | **NEW:** `Rotation` class for Euler angle extraction |
+| PyTorch | (ComfyUI) | Tensor I/O | Unchanged -- ComfyUI format bridge |
 
-## Critical: Python Version Constraint
+### Capabilities Mapped to Existing Deps
 
-**The system Python is 3.14.3 but MediaPipe only supports Python 3.9-3.12.**
+| Capability Needed | Solution | Why No New Dep |
+|---|---|---|
+| Head pose (pitch/yaw/roll) | MediaPipe `output_facial_transformation_matrixes=True` returns 4x4 matrix per face | Already in MediaPipe 0.10.18, just a boolean flag |
+| Rotation math (matrix to Euler, inverse) | `scipy.spatial.transform.Rotation` | Already installed as scikit-image transitive dep |
+| 3D landmark rotation to frontal | NumPy matrix multiplication (`pts @ R_inv.T`) | Core numpy |
+| IPD-based scaling | `np.linalg.norm` | Already used in v1.0 `normalize_landmarks()` |
+| Model file persistence | `numpy.savez_compressed` / `numpy.load` | Built into NumPy |
+| Multi-image averaging | `numpy.mean(axis=0)` over stacked arrays | Built into NumPy |
+| Directory traversal for image loading | `pathlib.Path.glob()` | Python stdlib |
 
-ComfyUI itself recommends Python 3.13 (3.14 is experimental). This project MUST run inside a Python 3.12 or 3.13 virtual environment. If ComfyUI is already running on 3.14, MediaPipe will not install.
+## Critical Implementation Details
 
-**Resolution options (in order of preference):**
-1. ComfyUI likely runs in a venv with Python 3.12/3.13 -- verify before development
-2. If ComfyUI uses 3.14, create a dedicated 3.12 venv for ComfyUI
-3. Check for community-built MediaPipe 3.13/3.14 wheels (unofficial, on HuggingFace)
+### 1. MediaPipe Facial Transformation Matrix (HIGH confidence)
 
-This is the single biggest integration risk for this milestone.
+**What it is:** A 4x4 rigid transform from canonical face space to detected face pose. Already available in the installed MediaPipe, disabled by default.
 
-## New Dependencies (to add)
+**Verified API (mediapipe 0.10.18):**
 
-Only two new packages beyond what ComfyUI already provides:
+```python
+# FaceLandmarkerOptions -- flip one boolean:
+output_facial_transformation_matrixes: bool = False  # change to True
 
-```bash
-pip install mediapipe>=0.10.20
-pip install scikit-image>=0.25.0
+# FaceLandmarkerResult -- already typed:
+facial_transformation_matrixes: List[numpy.ndarray]  # 4x4 float matrices per face
 ```
 
-Everything else (torch, numpy, scipy, Pillow, opencv) is already in ComfyUI's dependency tree.
+**Integration point:** Modify `utils/mediapipe_helper.py:get_landmarker()` to accept and pass through `output_facial_transformation_matrixes=True`. Modify `utils/landmarks.py:extract_landmarks()` to include the matrix in the face dict when present.
+
+**Verification method:** Confirmed via `inspect.getmembers(vision.FaceLandmarkerResult)` and `help(vision.FaceLandmarkerOptions)` on the installed package. The field exists, is typed as `List[numpy.ndarray]`, and the option flag is available.
+
+### 2. SciPy Rotation for Pose Decomposition (HIGH confidence)
+
+**What it is:** Extract pitch/yaw/roll from MediaPipe's 4x4 matrix, compute inverse rotation for frontal normalization.
+
+```python
+from scipy.spatial.transform import Rotation
+
+# Extract Euler angles from MediaPipe's 4x4 matrix
+rot = Rotation.from_matrix(transform_4x4[:3, :3])
+pitch, yaw, roll = rot.as_euler('xyz', degrees=True)
+
+# Compute inverse for frontal normalization
+inv_rot = rot.inv().as_matrix()
+frontal_pts = landmarks_3d @ inv_rot.T
+```
+
+**Integration point:** New `utils/pose_utils.py` module with functions for pose extraction and landmark de-rotation.
+
+**Verification method:** Tested with scipy 1.12.0 -- `Rotation.from_matrix()`, `.as_euler()`, `.inv()` all work correctly. Round-trip verified: construct rotation from known Euler angles, decompose back, get same angles.
+
+### 3. NumPy NPZ for Model Persistence (HIGH confidence)
+
+**What it is:** Compressed numpy archive format. Zero dependencies, safe loading, perfect for numeric array storage.
+
+**Measured performance:** 478x3 float32 landmarks + head dimensions + JSON metadata = **~6 KB compressed**.
+
+```python
+# Save model
+np.savez_compressed(path,
+    canonical_landmarks=canonical_3d,     # (478, 3) float32
+    head_dimensions=head_dims,            # (3,) float32
+    metadata=np.frombuffer(json.dumps({
+        'version': '1.0',
+        'n_images': count,
+        'ied_mean': mean_ied,
+    }).encode(), dtype=np.uint8)
+)
+
+# Load model (safe -- no pickle)
+data = np.load(path, allow_pickle=False)
+canonical = data['canonical_landmarks']
+meta = json.loads(bytes(data['metadata']))
+```
+
+**Why NPZ over alternatives:**
+
+| Format | Verdict | Reason |
+|--------|---------|--------|
+| NPZ | **Use this** | Zero deps, safe, preserves dtype/shape, ~6KB |
+| JSON | No | Loses array dtype, 10x larger for numeric data |
+| msgpack | No | Requires new dep (msgpack-numpy), no benefit for ~6KB |
+| pickle | No | Arbitrary code execution risk with `allow_pickle=True` |
+| HDF5 | No | Requires h5py, overkill for single face model |
+
+**Integration point:** New `utils/model_io.py` with `save_face_model()` / `load_face_model()`.
+
+**Verification method:** Full round-trip tested with numpy 1.26.4 -- save, load, verify shapes, dtype, and metadata integrity.
+
+### 4. 3D Normalization Pipeline (using above tools)
+
+The full normalization flow uses only the three tools above:
+
+```
+Image -> MediaPipe detect (with transform matrix)
+      -> Extract 3D landmarks (478, 3) from result
+      -> Extract rotation from 4x4 matrix via scipy.Rotation
+      -> De-rotate landmarks to frontal: pts_3d @ R_inv.T
+      -> Scale by IPD: (pts - center) / ied  (numpy)
+      -> Now in canonical pose-free, scale-free space
+```
+
+For multi-image averaging:
+```
+For each image:
+    -> Normalize to frontal + IPD-scaled
+    -> Stack into (N_images, 478, 3) array
+np.mean(axis=0) -> canonical model (478, 3)
+```
+
+## What NOT to Add
+
+| Library | Why Considered | Why Rejected |
+|---------|---------------|-------------|
+| OpenCV (cv2) | solvePnP for pose estimation | MediaPipe already provides transformation matrix; project explicitly avoids OpenCV |
+| msgpack / msgpack-numpy | Model file serialization | NPZ is simpler, zero deps, sufficient for ~6KB models |
+| h5py | Model file persistence | Overkill; NPZ handles this with zero new deps |
+| open3d | 3D point cloud operations | Heavy dep, only need basic matrix math that numpy handles |
+| trimesh | 3D mesh manipulation | Not doing mesh operations, just landmark arrays |
+| dlib | Alternative face detection | MediaPipe already integrated, switching would break v1.0 |
 
 ## Alternatives Considered
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| Face landmarks | MediaPipe | Insightface | Non-commercial license restriction; heavier dependency (onnxruntime); Mac support is worse |
-| Face landmarks | MediaPipe | dlib | Only 68 landmarks (vs 478); complex C++ build on Mac; much less facial detail for shape matching |
-| Face landmarks | MediaPipe | face-alignment (BlazeFace) | Fewer landmarks; less maintained; MediaPipe is the upstream source anyway |
-| TPS warping | scikit-image | opencv-contrib-python | Requires separate `opencv-contrib-python` install (conflicts with `opencv-python`); OpenCV's TPS API is clunky (DMatch objects, reshape gymnastics); scikit-image's API is cleaner |
-| TPS warping | scikit-image | Custom numpy TPS | Reinventing the wheel; scikit-image's implementation is tested and optimized |
-| Warping method | TPS | Piecewise affine (Delaunay triangulation) | More artifacts at triangle boundaries; TPS produces smoother, more natural deformations for face shape changes; PAW is faster but quality matters more here |
-| Compositing | Feathered mask + alpha blend | cv2.seamlessClone (Poisson) | Poisson blending can cause color shifts and ghosting artifacts; feathered Gaussian mask is simpler, more predictable, and gives users more control via the strength parameter |
+| Pose estimation | MediaPipe transform matrix | cv2.solvePnP | Would add OpenCV dep; MediaPipe provides the 4x4 matrix for free |
+| Rotation math | scipy.spatial.transform.Rotation | Manual Rodrigues in numpy | scipy already installed, Rotation API is cleaner and handles edge cases (gimbal lock warning) |
+| Model format | numpy .npz | JSON with base64 arrays | NPZ is native, smaller, preserves dtype |
+| Model format | numpy .npz | pickle | Security risk; npz with allow_pickle=False is safe |
+| Frontal normalization | De-rotate 3D landmarks via inverse matrix | solvePnP + manual projection | MediaPipe gives the matrix directly; no need to solve it ourselves |
 
-## MediaPipe API: Use Face Landmarker (NOT Legacy Face Mesh)
+## Installation
 
-The legacy `mediapipe.solutions.face_mesh` API still works but is deprecated. Use the new task-based API:
-
-```python
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-
-# Requires downloading face_landmarker.task model file
-options = vision.FaceLandmarkerOptions(
-    base_options=python.BaseOptions(model_asset_path="face_landmarker.task"),
-    running_mode=vision.RunningMode.IMAGE,
-    num_faces=5,  # support multi-face
-)
-
-with vision.FaceLandmarker.create_from_options(options) as landmarker:
-    result = landmarker.detect(mp_image)
-    # result.face_landmarks -> list of 478 NormalizedLandmark per face
+```bash
+# No new installation needed. Verify existing deps:
+conda run -n comfyui python -c "
+import mediapipe; print(f'mediapipe: {mediapipe.__version__}')  # 0.10.18
+import scipy; print(f'scipy: {scipy.__version__}')              # 1.12.0
+import numpy; print(f'numpy: {numpy.__version__}')              # 1.26.4
+import skimage; print(f'skimage: {skimage.__version__}')        # 0.24.0
+from scipy.spatial.transform import Rotation; print('Rotation: OK')
+"
 ```
 
-The `.task` model file (~4MB) needs to be bundled or auto-downloaded. It provides 478 landmarks (10 more than legacy's 468), plus optional blendshapes and transformation matrices.
+## File Extension Convention
 
-## scikit-image TPS API (0.26.0)
-
-```python
-from skimage.transform import ThinPlateSplineTransform, warp
-
-# src_points, dst_points: (N, 2) arrays of landmark coordinates
-tps = ThinPlateSplineTransform.from_estimate(dst_points, src_points)
-warped = warp(image, tps, output_shape=image.shape[:2])
-```
-
-Note: `from_estimate` is the new API in 0.26.0. The old `estimate()` method is deprecated.
-
-## Existing Landscape: ComfyUI_FaceShaper
-
-The closest existing project is [ComfyUI_FaceShaper](https://github.com/fssorc/ComfyUI_FaceShaper). Key differences from our approach:
-
-- Uses Insightface (non-commercial license) OR MediaPipe OR face-alignment
-- Requires LivePortrait model files (landmark.onnx, landmark_model.pth)
-- Uses "liquefying and stretching" rather than TPS warping
-- No explicit macOS/Apple Silicon support
-- More complex dependency tree
-
-Our approach is simpler: MediaPipe only, TPS warping via scikit-image, minimal deps, Mac-first.
+Face model files use `.facemodel.npz` extension to distinguish from other numpy archives. This is purely a naming convention, not a new format.
 
 ## Sources
 
-- [MediaPipe PyPI](https://pypi.org/project/mediapipe/) - version 0.10.32, Python 3.9-3.12, macOS ARM64
-- [MediaPipe Face Landmarker Python Guide](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker/python) - new task API
-- [scikit-image 0.26.0 TPS docs](https://scikit-image.org/docs/stable/auto_examples/transform/plot_tps_deformation.html)
-- [scikit-image 0.26.0 release notes](https://scikit-image.org/docs/stable/release_notes/release_0.26.html) - `from_estimate` API
-- [opencv-contrib-python PyPI](https://pypi.org/project/opencv-contrib-python/) - version 4.13.0.92
-- [ComfyUI_FaceShaper](https://github.com/fssorc/ComfyUI_FaceShaper) - existing solution comparison
-- [ComfyUI system requirements](https://docs.comfy.org/installation/system_requirements) - Python 3.13 recommended
-- [OpenCV seamless cloning docs](https://docs.opencv.org/4.x/df/da0/group__photo__clone.html)
+- MediaPipe FaceLandmarkerOptions API: verified via `help(vision.FaceLandmarkerOptions)` on installed mediapipe 0.10.18 -- `output_facial_transformation_matrixes` parameter confirmed
+- MediaPipe FaceLandmarkerResult: verified via `inspect.getmembers()` -- `facial_transformation_matrixes: List[numpy.ndarray]` field confirmed
+- [MediaPipe 3D Face Transform](https://developers.googleblog.com/mediapipe-3d-face-transform/) -- describes the face geometry module that produces the transformation matrix
+- [SciPy Rotation class docs (v1.17)](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html) -- `from_matrix()`, `as_euler()`, `inv()`
+- [MediaPipe Face Mesh wiki](https://github.com/google-ai-edge/mediapipe/wiki/MediaPipe-Face-Mesh) -- z coordinate semantics (relative depth, scaled as x)
+- NumPy npz format: round-trip verified with numpy 1.26.4 on installed environment
+- SciPy Rotation: round-trip verified with scipy 1.12.0 -- construct from Euler, decompose, get matching angles
