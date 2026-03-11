@@ -19,8 +19,8 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 - [x] **MODL-01**: User can build a canonical face model from a directory of target images via FaceModelBuilder node
 - [x] **MODL-02**: FaceModelBuilder auto-rejects extreme-pose images and weights averaging by cos(yaw)*cos(pitch)
 - [x] **MODL-03**: FaceModelBuilder saves model as versioned .facemodel.npz (~6KB) with canonical landmarks and head dimensions
-- [ ] **MODL-04**: FaceModelBuilder outputs per-image quality report (used/rejected, yaw/pitch/roll, confidence)
-- [ ] **MODL-05**: FaceModelBuilder outputs a landmark preview visualization for model validation
+- [x] **MODL-04**: FaceModelBuilder outputs per-image quality report (used/rejected, yaw/pitch/roll, confidence)
+- [x] **MODL-05**: FaceModelBuilder outputs a landmark preview visualization for model validation
 
 ### Model Morphing
 
@@ -70,8 +70,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-01 | Phase 7 | Complete |
 | MODL-02 | Phase 7 | Complete |
 | MODL-03 | Phase 6 | Complete |
-| MODL-04 | Phase 7 | Pending |
-| MODL-05 | Phase 7 | Pending |
+| MODL-04 | Phase 7 | Complete |
+| MODL-05 | Phase 7 | Complete |
 | MRPH-01 | Phase 8 | Pending |
 | MRPH-02 | Phase 8 | Pending |
 | MRPH-03 | Phase 8 | Pending |

@@ -23,7 +23,7 @@
 
 - [x] **Phase 5: 3D Pose Foundation** - Extract head pose from MediaPipe matrix, frontalize and IPD-normalize landmarks (completed 2026-03-11)
 - [x] **Phase 6: Model Persistence** - Define and implement versioned .facemodel.npz file format with round-trip I/O (completed 2026-03-11)
-- [ ] **Phase 7: FaceModelBuilder Node** - User-facing node that processes a directory of images into an averaged canonical face model
+- [x] **Phase 7: FaceModelBuilder Node** - User-facing node that processes a directory of images into an averaged canonical face model (completed 2026-03-11)
 - [ ] **Phase 8: FaceModelMorph Node** - User-facing node that applies a face model to source images via pose-aware delta and TPS warp
 - [ ] **Phase 9: Integration and Polish** - Edge case hardening, end-to-end pipeline validation, model preview visualization
 
@@ -116,6 +116,6 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 4. Compositing and Integration | v1.0 | 2/2 | Complete | 2026-03-11 |
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
 | 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
-| 7. FaceModelBuilder Node | v1.1 | 0/2 | Not started | - |
+| 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
 | 8. FaceModelMorph Node | v1.1 | 0/? | Not started | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
