@@ -207,3 +207,57 @@ class TestCropLandmarks:
         # Verify that crop landmarks are in the crop coordinate space (non-negative mostly)
         # and that they differ from the original landmarks
         assert crop_landmarks.shape == (478, 2)
+
+
+class TestCropLandmarksPose:
+    """Test pose key forwarding through FaceCropAlign."""
+
+    def test_crop_landmarks_forwards_pose(self, sample_face_image_tensor):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+        from tests.conftest import _make_deterministic_landmarks
+
+        pose_data = {"pitch": 5.0, "yaw": -10.0, "roll": 2.0, "matrix": np.eye(4)}
+        landmarks = _make_deterministic_landmarks(128.0, 128.0)
+        face_list = [{
+            "landmarks": landmarks,
+            "landmarks_3d": np.zeros((478, 3), dtype=np.float64),
+            "pose": pose_data,
+        }]
+
+        node = FaceCropAlign()
+        _, _, _, crop_lms = node.crop_and_align(sample_face_image_tensor, face_list)
+
+        assert len(crop_lms) == 1
+        assert crop_lms[0]["pose"] is pose_data
+
+    def test_crop_landmarks_pose_none_when_missing(self, sample_face_image_tensor):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+        from tests.conftest import _make_deterministic_landmarks
+
+        landmarks = _make_deterministic_landmarks(128.0, 128.0)
+        face_list = [{
+            "landmarks": landmarks,
+            "landmarks_3d": np.zeros((478, 3), dtype=np.float64),
+        }]
+
+        node = FaceCropAlign()
+        _, _, _, crop_lms = node.crop_and_align(sample_face_image_tensor, face_list)
+
+        assert len(crop_lms) == 1
+        assert crop_lms[0].get("pose") is None
+
+    def test_degenerate_crop_returns_empty_list(self, sample_face_image_tensor):
+        from comfyui_imgtools.face_crop import FaceCropAlign
+
+        # All landmarks at the same point -> degenerate crop box
+        landmarks = np.full((478, 2), [128.0, 128.0], dtype=np.float64)
+        face_list = [{
+            "landmarks": landmarks,
+            "landmarks_3d": np.zeros((478, 3), dtype=np.float64),
+            "pose": {"pitch": 0.0, "yaw": 0.0, "roll": 0.0, "matrix": np.eye(4)},
+        }]
+
+        node = FaceCropAlign()
+        _, _, _, crop_lms = node.crop_and_align(sample_face_image_tensor, face_list)
+
+        assert crop_lms == []

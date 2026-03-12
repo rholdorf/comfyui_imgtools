@@ -85,6 +85,7 @@ class FaceCropAlign:
             crop_landmarks_out = [{
                 "landmarks": crop_landmarks,
                 "landmarks_3d": landmarks[idx].get("landmarks_3d", np.zeros((478, 3))),
+                "pose": landmarks[idx].get("pose"),
             }]
 
         # Compute rotation center (eye midpoint)
