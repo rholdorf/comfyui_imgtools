@@ -80,3 +80,13 @@ class TestLoadFaceModel:
         assert LoadFaceModel.RETURN_TYPES == ("FACE_MODEL",)
         assert LoadFaceModel.FUNCTION == "load_model"
         assert LoadFaceModel.CATEGORY == "imgtools/face"
+
+
+class TestLoadFaceModelRegistration:
+    def test_registered_in_mappings(self):
+        """LoadFaceModel must appear in ComfyUI node registries."""
+        from comfyui_imgtools import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
+
+        assert "LoadFaceModel" in NODE_CLASS_MAPPINGS
+        assert "LoadFaceModel" in NODE_DISPLAY_NAME_MAPPINGS
+        assert NODE_DISPLAY_NAME_MAPPINGS["LoadFaceModel"] == "ImgTools Load Face Model"
