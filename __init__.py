@@ -6,6 +6,7 @@ try:
     from .face_morph import FaceShapeMorph
     from .face_composite import FaceComposite
     from .face_model_builder import FaceModelBuilder
+    from .face_model_morph import FaceModelMorph
     _face_nodes_available = True
 except ImportError as e:
     print(f"[ImgTools] Warning: Face detection nodes unavailable. {e}")
@@ -35,5 +36,7 @@ if _face_nodes_available:
     NODE_DISPLAY_NAME_MAPPINGS["FaceComposite"] = "ImgTools Face Composite"
     NODE_CLASS_MAPPINGS["FaceModelBuilder"] = FaceModelBuilder
     NODE_DISPLAY_NAME_MAPPINGS["FaceModelBuilder"] = "ImgTools Face Model Builder"
+    NODE_CLASS_MAPPINGS["FaceModelMorph"] = FaceModelMorph
+    NODE_DISPLAY_NAME_MAPPINGS["FaceModelMorph"] = "ImgTools Face Model Morph"
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
