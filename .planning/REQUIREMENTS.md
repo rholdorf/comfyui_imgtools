@@ -25,7 +25,7 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 ### Model Morphing
 
 - [x] **MRPH-01**: User can apply a face model to a source image via FaceModelMorph node using pose-aware delta and TPS warp
-- [ ] **MRPH-02**: FaceModelMorph passes head dimensions from model to FaceComposite for correct scaling
+- [x] **MRPH-02**: FaceModelMorph passes head dimensions from model to FaceComposite for correct scaling
 - [x] **MRPH-03**: FaceModelMorph exposes a symmetrize toggle (default off) for the canonical model
 
 ### Integration
@@ -73,7 +73,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-04 | Phase 7 | Complete |
 | MODL-05 | Phase 7 | Complete |
 | MRPH-01 | Phase 8 | Complete |
-| MRPH-02 | Phase 8 | Pending |
+| MRPH-02 | Phase 8 | Complete |
 | MRPH-03 | Phase 8 | Complete |
 | INTG-01 | Phase 9 | Pending |
 | INTG-02 | Phase 9 | Pending |
