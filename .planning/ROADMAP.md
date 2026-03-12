@@ -117,5 +117,5 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
 | 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
 | 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
-| 8. FaceModelMorph Node | v1.1 | 0/2 | Not started | - |
+| 8. FaceModelMorph Node | 1/2 | In Progress|  | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
