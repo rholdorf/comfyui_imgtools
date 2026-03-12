@@ -39,7 +39,8 @@ class FaceDetect:
         # Convert to MediaPipe format and detect
         mp_image = comfyui_to_mediapipe(image)
         landmarker = get_landmarker(
-            min_detection_confidence=min_detection_confidence
+            min_detection_confidence=min_detection_confidence,
+            output_facial_transformation_matrixes=True,
         )
         result = landmarker.detect(mp_image)
 

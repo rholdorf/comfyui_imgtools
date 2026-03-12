@@ -132,3 +132,40 @@ class TestFaceDetectIntegration:
         landmarks, preview, face_count = node.detect_faces(real_face_tensor)
 
         assert face_count == len(landmarks)
+
+    def test_face_detect_emits_pose_data(self, real_face_tensor):
+        """Verify FaceDetect emits non-None pose dicts with expected keys."""
+        from comfyui_imgtools.face_detection import FaceDetect
+
+        node = FaceDetect()
+        landmarks, preview, face_count = node.detect_faces(real_face_tensor)
+
+        assert face_count >= 1, "Should detect at least 1 face"
+        pose = landmarks[0]["pose"]
+        assert pose is not None, "pose should not be None with transformation matrix enabled"
+        assert "yaw" in pose
+        assert "pitch" in pose
+        assert "roll" in pose
+        assert "matrix" in pose
+        assert pose["matrix"].shape == (4, 4)
+
+    def test_pose_values_are_reasonable(self, real_face_tensor):
+        """Verify pose angle values are floats within expected range."""
+        from comfyui_imgtools.face_detection import FaceDetect
+
+        node = FaceDetect()
+        landmarks, preview, face_count = node.detect_faces(real_face_tensor)
+
+        assert face_count >= 1
+        pose = landmarks[0]["pose"]
+        assert pose is not None
+
+        for key in ("yaw", "pitch", "roll"):
+            val = pose[key]
+            assert isinstance(val, float), f"{key} should be float, got {type(val)}"
+            assert -180 < val < 180, f"{key}={val} out of expected range"
+
+        matrix = pose["matrix"]
+        assert matrix.dtype in (np.float64, np.float32), (
+            f"matrix dtype should be float, got {matrix.dtype}"
+        )
