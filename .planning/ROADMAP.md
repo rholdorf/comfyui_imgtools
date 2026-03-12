@@ -83,11 +83,12 @@ Plans:
   3. Head dimensions from the model are passed through to FaceComposite for correct scaling during compositing
   4. User can toggle a symmetrize option (default off) to force the canonical model to bilateral symmetry before applying
   5. Output interface (IMAGE, MASK, ALIGN_DATA) matches FaceShapeMorph, making FaceModelMorph a drop-in replacement in existing workflows
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [ ] 08-01-PLAN.md — TDD: FaceModelMorph core with pose-aware delta computation, Procrustes fallback, model symmetrization, and pose attenuation
 - [ ] 08-02-PLAN.md — Node registration in __init__.py, head_scale passthrough tests, full regression suite
+- [ ] 08-03-PLAN.md — Gap closure: FaceComposite head_scale consumption for correct scaling during compositing
 
 ### Phase 9: Integration and Polish
 **Goal**: The full model-based pipeline handles real-world edge cases gracefully and is validated end-to-end
@@ -117,5 +118,5 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 5. 3D Pose Foundation | 2/2 | Complete   | 2026-03-11 | - |
 | 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
 | 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
-| 8. FaceModelMorph Node | 2/2 | Complete   | 2026-03-12 | - |
+| 8. FaceModelMorph Node | 2/3 | Gap closure | 2026-03-12 | - |
 | 9. Integration and Polish | v1.1 | 0/? | Not started | - |
