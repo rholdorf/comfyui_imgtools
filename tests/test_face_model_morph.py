@@ -575,3 +575,79 @@ class TestHeadScalePassthrough:
         assert out_align_1["head_scale"] != pytest.approx(1.0, abs=1e-6), (
             f"Expected head_scale!=1.0 at strength=1, got {out_align_1['head_scale']}"
         )
+
+
+# ---------------------------------------------------------------------------
+# TestModelValidation
+# ---------------------------------------------------------------------------
+
+class TestModelValidation:
+    """Model validation produces diagnostic warnings and graceful passthrough."""
+
+    def test_empty_model_passthrough(self, capsys):
+        """morph() with face_model={} returns passthrough and prints warning."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        node = FaceModelMorph()
+        img = _make_test_image()
+        face = _make_synthetic_face()
+        align_data = _make_align_data()
+
+        result = node.morph(img, {}, [face], align_data, strength=0.5)
+        morphed_img, mask, out_align = result
+
+        # Should be passthrough
+        assert torch.equal(morphed_img, img)
+        assert mask.shape == (1, 64, 64)
+
+        # Should print diagnostic warning
+        captured = capsys.readouterr()
+        assert "[FaceModelMorph]" in captured.out
+
+    def test_missing_keys_passthrough(self, capsys):
+        """morph() with missing required keys returns passthrough and prints warning."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        node = FaceModelMorph()
+        img = _make_test_image()
+        face = _make_synthetic_face()
+        align_data = _make_align_data()
+
+        # Model with only 'version' key -- missing canonical_landmarks and head_dimensions
+        result = node.morph(img, {"version": "2"}, [face], align_data, strength=0.5)
+        morphed_img, mask, out_align = result
+
+        # Should be passthrough
+        assert torch.equal(morphed_img, img)
+        assert mask.shape == (1, 64, 64)
+
+        # Should print warning listing missing keys
+        captured = capsys.readouterr()
+        assert "[FaceModelMorph]" in captured.out
+        assert "canonical_landmarks" in captured.out
+
+    def test_wrong_shape_passthrough(self, capsys):
+        """morph() with wrong landmark shape returns passthrough and prints warning."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        node = FaceModelMorph()
+        img = _make_test_image()
+        face = _make_synthetic_face()
+        align_data = _make_align_data()
+
+        # Model with wrong canonical_landmarks shape (10, 2) instead of (478, 2)
+        bad_model = {
+            "canonical_landmarks": np.zeros((10, 2)),
+            "head_dimensions": {"width": 1.8, "height": 2.3, "depth": 1.0},
+        }
+        result = node.morph(img, bad_model, [face], align_data, strength=0.5)
+        morphed_img, mask, out_align = result
+
+        # Should be passthrough
+        assert torch.equal(morphed_img, img)
+        assert mask.shape == (1, 64, 64)
+
+        # Should print warning about shape mismatch
+        captured = capsys.readouterr()
+        assert "[FaceModelMorph]" in captured.out
+        assert "shape" in captured.out.lower()
