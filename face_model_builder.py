@@ -210,25 +210,38 @@ class FaceModelBuilder:
         pitch_threshold: float = 30.0,
         save_path: str = "",
     ):
-        model_dict, results, actual_save_path = build_face_model(
-            directory, yaw_threshold, pitch_threshold, save_path
-        )
+        try:
+            model_dict, results, actual_save_path = build_face_model(
+                directory, yaw_threshold, pitch_threshold, save_path
+            )
 
-        # Format quality report
-        report = format_quality_report(
-            results, actual_save_path, yaw_threshold, pitch_threshold
-        )
+            # Format quality report
+            report = format_quality_report(
+                results, actual_save_path, yaw_threshold, pitch_threshold
+            )
 
-        # Render preview image
-        canonical_2d = model_dict["canonical_landmarks"]
-        n_accepted = sum(1 for r in results if r["status"] == "ACCEPTED")
-        preview_np = render_preview(
-            canonical_2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, n_accepted
-        )
+            # Render preview image
+            canonical_2d = model_dict["canonical_landmarks"]
+            n_accepted = sum(1 for r in results if r["status"] == "ACCEPTED")
+            preview_np = render_preview(
+                canonical_2d, MORPH_CONTROL_INDICES, FACE_OVAL_INDICES, n_accepted
+            )
 
-        # Convert to ComfyUI IMAGE tensor: [1, H, W, 3] float32
-        preview_tensor = torch.from_numpy(
-            preview_np.astype(np.float32) / 255.0
-        ).unsqueeze(0)
+            # Convert to ComfyUI IMAGE tensor: [1, H, W, 3] float32
+            preview_tensor = torch.from_numpy(
+                preview_np.astype(np.float32) / 255.0
+            ).unsqueeze(0)
 
-        return (model_dict, report, preview_tensor)
+            return (model_dict, report, preview_tensor)
+        except ValueError as e:
+            print(f"[FaceModelBuilder] Warning: {e}")
+            error_report = f"ERROR: {e}"
+            empty_model = {}
+            black_preview = torch.zeros(1, 512, 512, 3, dtype=torch.float32)
+            return (empty_model, error_report, black_preview)
+        except Exception as e:
+            print(f"[FaceModelBuilder] Warning: Unexpected error: {e}")
+            error_report = f"ERROR: Unexpected error: {e}"
+            empty_model = {}
+            black_preview = torch.zeros(1, 512, 512, 3, dtype=torch.float32)
+            return (empty_model, error_report, black_preview)
