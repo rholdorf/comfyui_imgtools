@@ -236,3 +236,92 @@ class TestE2EPipeline:
         assert composited_image.dtype == torch.float32
         assert face_region_mask.shape == (1, 256, 256)
         assert face_region_mask.dtype == torch.float32
+
+
+# ---------------------------------------------------------------------------
+# TestPoseAwarePipeline
+# ---------------------------------------------------------------------------
+
+class TestPoseAwarePipeline:
+    """Integration tests verifying pose-aware vs fallback morph paths."""
+
+    def _make_model_and_inputs(self):
+        """Create a face model and source inputs for morph testing."""
+        rng = np.random.default_rng(42)
+
+        canonical_2d = rng.random((478, 2)).astype(np.float64) * 2 - 1
+        canonical_2d[468] = [-0.5, 0.0]  # left iris
+        canonical_2d[473] = [0.5, 0.0]   # right iris
+
+        face_model = {
+            "version": 2,
+            "canonical_landmarks": canonical_2d,
+            "head_dimensions": {"width": 1.8, "height": 2.3, "depth": 1.0},
+            "control_indices": np.array([10, 21, 54, 58, 67, 93, 103, 107,
+                109, 127, 132, 136, 148, 149, 150, 152, 162, 172, 176,
+                234, 251, 276, 284, 285, 288, 297, 323, 332, 336, 338,
+                356, 361, 365, 377, 378, 379, 389, 397, 400, 454, 46, 55],
+                dtype=np.int64),
+            "landmark_stddev": np.zeros((478, 3), dtype=np.float64),
+        }
+
+        source_image = torch.rand(1, 128, 128, 3, dtype=torch.float32)
+        source_align_data = {
+            "crop_box": (64, 64, 192, 192),
+            "original_size": (256, 256),
+            "rotation_angle": 0.0,
+            "rotation_center": (128, 128),
+            "head_scale": 1.0,
+        }
+
+        return face_model, source_image, source_align_data, canonical_2d
+
+    def test_pose_aware_delta_path_exercised(self):
+        """When pose data is present, _compute_pose_aware_delta is called."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        face_model, source_image, source_align_data, canonical_2d = (
+            self._make_model_and_inputs()
+        )
+        source_landmarks = _make_source_landmarks(canonical_2d)
+
+        morph_node = FaceModelMorph()
+
+        with patch.object(
+            FaceModelMorph, "_compute_pose_aware_delta",
+            wraps=morph_node._compute_pose_aware_delta,
+        ) as spy:
+            morphed_face, warp_mask, align_data = morph_node.morph(
+                source_image, face_model, source_landmarks,
+                source_align_data, strength=0.5,
+            )
+            spy.assert_called_once()
+
+        assert morphed_face.shape == (1, 128, 128, 3)
+        assert warp_mask.shape == (1, 128, 128)
+
+    def test_procrustes_fallback_when_no_pose(self):
+        """When pose is None, _compute_fallback_delta is called."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        face_model, source_image, source_align_data, canonical_2d = (
+            self._make_model_and_inputs()
+        )
+        source_landmarks = _make_source_landmarks(canonical_2d)
+        # Set pose to None to trigger fallback path
+        source_landmarks[0]["pose"] = None
+
+        morph_node = FaceModelMorph()
+
+        with patch.object(
+            FaceModelMorph, "_compute_fallback_delta",
+            wraps=morph_node._compute_fallback_delta,
+        ) as spy:
+            morphed_face, warp_mask, align_data = morph_node.morph(
+                source_image, face_model, source_landmarks,
+                source_align_data, strength=0.5,
+            )
+            spy.assert_called_once()
+
+        assert morphed_face.shape == (1, 128, 128, 3)
+        assert warp_mask.shape == (1, 128, 128)
