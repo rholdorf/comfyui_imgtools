@@ -1,12 +1,14 @@
 """FaceComposite ComfyUI node for compositing morphed face back into original image.
 
-Pastes the morphed face as-is into the original image at the crop_box position
-with feathered edge blending. No resize, no warp — morphed_face is used exactly
-as received.
+Pastes the morphed face into the original image at the crop_box position
+with feathered edge blending. Supports head_scale from align_data: when
+head_scale != 1.0, morphed_face is resized proportionally around the crop
+center before compositing.
 """
 
 import numpy as np
 import torch
+from skimage.transform import resize as skimage_resize
 
 
 class FaceComposite:
@@ -88,8 +90,27 @@ class FaceComposite:
             face_np = morphed_face[0].cpu().numpy().astype(np.float64)
             face_h, face_w = face_np.shape[:2]
 
-            # Place at crop_box origin, using morphed_face dimensions as-is
-            px1, py1 = x1, y1
+            # Apply head_scale resize if present and != 1.0
+            head_scale = align_data.get("head_scale", 1.0)
+            if abs(head_scale - 1.0) > 1e-4:
+                new_h = int(round(face_h * head_scale))
+                new_w = int(round(face_w * head_scale))
+                if new_h >= 1 and new_w >= 1:
+                    face_np = skimage_resize(
+                        face_np, (new_h, new_w, 3),
+                        anti_aliasing=True, preserve_range=True,
+                    )
+                    face_h, face_w = new_h, new_w
+                    # Center the scaled face on the original crop center
+                    cx = (x1 + x2) / 2.0
+                    cy = (y1 + y2) / 2.0
+                    px1 = int(round(cx - new_w / 2.0))
+                    py1 = int(round(cy - new_h / 2.0))
+                else:
+                    px1, py1 = x1, y1
+            else:
+                px1, py1 = x1, y1
+
             px2 = px1 + face_w
             py2 = py1 + face_h
 
