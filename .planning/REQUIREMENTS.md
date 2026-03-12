@@ -31,7 +31,7 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 ### Integration
 
 - [x] **INTG-01**: FaceModelBuilder handles edge cases: empty directory, all images rejected, single image, no face detected
-- [ ] **INTG-02**: FaceModelMorph handles edge case: malformed or incompatible model file
+- [x] **INTG-02**: FaceModelMorph handles edge case: malformed or incompatible model file
 
 ## v1.2 Requirements
 
@@ -76,7 +76,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MRPH-02 | Phase 8 | Complete |
 | MRPH-03 | Phase 8 | Complete |
 | INTG-01 | Phase 9 | Complete |
-| INTG-02 | Phase 9 | Pending |
+| INTG-02 | Phase 9 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 14 total
