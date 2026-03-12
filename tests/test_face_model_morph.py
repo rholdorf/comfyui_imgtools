@@ -502,3 +502,76 @@ class TestMorphOutput:
         assert isinstance(morphed_img, torch.Tensor)
         assert isinstance(mask, torch.Tensor)
         assert isinstance(out_align, dict)
+
+
+# ---------------------------------------------------------------------------
+# TestRegistration
+# ---------------------------------------------------------------------------
+
+class TestRegistration:
+    """FaceModelMorph is registered in ComfyUI node system."""
+
+    def test_node_registered(self):
+        """FaceModelMorph is in NODE_CLASS_MAPPINGS."""
+        import comfyui_imgtools as pkg
+        assert "FaceModelMorph" in pkg.NODE_CLASS_MAPPINGS
+
+    def test_display_name(self):
+        """Display name is 'ImgTools Face Model Morph'."""
+        import comfyui_imgtools as pkg
+        assert pkg.NODE_DISPLAY_NAME_MAPPINGS["FaceModelMorph"] == "ImgTools Face Model Morph"
+
+    def test_drop_in_replacement(self):
+        """RETURN_TYPES and RETURN_NAMES match FaceShapeMorph exactly."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+        from comfyui_imgtools.face_morph import FaceShapeMorph
+        assert FaceModelMorph.RETURN_TYPES == FaceShapeMorph.RETURN_TYPES
+        assert FaceModelMorph.RETURN_NAMES == FaceShapeMorph.RETURN_NAMES
+
+
+# ---------------------------------------------------------------------------
+# TestHeadScalePassthrough
+# ---------------------------------------------------------------------------
+
+class TestHeadScalePassthrough:
+    """head_scale in output align_data is correct."""
+
+    def test_head_scale_in_align_data(self):
+        """Output align_data contains 'head_scale' key with a float value."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        node = FaceModelMorph()
+        img = _make_test_image()
+        face = _make_synthetic_face(yaw=0.0, pitch=0.0)
+        model = _make_synthetic_model(offset=0.2)
+        align_data = _make_align_data()
+
+        result = node.morph(img, model, [face], align_data, strength=0.5)
+        _, _, out_align = result
+        assert "head_scale" in out_align
+        assert isinstance(out_align["head_scale"], float)
+
+    def test_head_scale_interpolated_by_strength(self):
+        """strength=0.0 -> head_scale==1.0, strength=1.0 -> head_scale!=1.0."""
+        from comfyui_imgtools.face_model_morph import FaceModelMorph
+
+        node = FaceModelMorph()
+        img = _make_test_image()
+        face = _make_synthetic_face(yaw=0.0, pitch=0.0)
+        # Use offset to ensure model and source have different head dimensions
+        model = _make_synthetic_model(offset=0.3)
+        align_data = _make_align_data()
+
+        # At strength=0.0, head_scale should be 1.0 (no change)
+        result_0 = node.morph(img, model, [face], align_data, strength=0.0)
+        _, _, out_align_0 = result_0
+        assert out_align_0["head_scale"] == pytest.approx(1.0, abs=1e-6), (
+            f"Expected head_scale=1.0 at strength=0, got {out_align_0['head_scale']}"
+        )
+
+        # At strength=1.0, head_scale should differ from 1.0
+        result_1 = node.morph(img, model, [face], align_data, strength=1.0)
+        _, _, out_align_1 = result_1
+        assert out_align_1["head_scale"] != pytest.approx(1.0, abs=1e-6), (
+            f"Expected head_scale!=1.0 at strength=1, got {out_align_1['head_scale']}"
+        )
