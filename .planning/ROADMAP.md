@@ -134,6 +134,10 @@ Plans:
   2. Loading a valid .facemodel.npz produces the same model data as the original save
   3. Loading an invalid/missing file produces a clear user-facing error message
   4. Node is registered in `__init__.py` and appears in ComfyUI node list
+**Plans**: 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md — LoadFaceModel node with file path input, error handling, registration, and tests
 
 ## Progress
 
@@ -152,4 +156,4 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 8. FaceModelMorph Node | 2/3 | Gap closure | 2026-03-12 | - |
 | 9. Integration and Polish | v1.1 | 0/3 | Not started | - |
 | 10. Enable Pose Data Pipeline | v1.1 | Complete    | 2026-03-12 | 2026-03-12 |
-| 11. LoadFaceModel Node | v1.1 | 0/0 | Not started | - |
+| 11. LoadFaceModel Node | v1.1 | 0/1 | Not started | - |
