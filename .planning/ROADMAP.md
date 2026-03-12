@@ -28,6 +28,7 @@
 - [ ] **Phase 9: Integration and Polish** - Edge case hardening, end-to-end pipeline validation, model preview visualization
 - [x] **Phase 10: Enable Pose Data Pipeline** - Wire FaceDetect transformation matrix output so pose-aware morphing works at runtime (gap closure) (completed 2026-03-12)
 - [x] **Phase 11: LoadFaceModel Node** - User-facing node to reload saved .facemodel.npz files in new sessions (gap closure) (completed 2026-03-12)
+- [ ] **Phase 12: Forward Pose Data Through FaceCropAlign** - Fix FaceCropAlign to forward pose key so pose-aware morphing works end-to-end (gap closure)
 
 ## Phase Details
 
@@ -139,10 +140,26 @@ Plans:
 Plans:
 - [ ] 11-01-PLAN.md — LoadFaceModel node with file path input, error handling, registration, and tests
 
+### Phase 12: Forward Pose Data Through FaceCropAlign
+**Goal**: FaceCropAlign forwards pose data from FaceDetect so the pose-aware morphing pipeline works end-to-end through the standard node chain
+**Depends on**: Phase 10
+**Requirements**: POSE-04, MRPH-01
+**Gap Closure**: Closes remaining gap from v1.1 re-audit
+**Success Criteria** (what must be TRUE):
+  1. `crop_landmarks_out` dict in `face_crop.py` includes the `pose` key from upstream face dicts
+  2. Full node chain (FaceDetect → FaceCropAlign → FaceModelMorph) delivers pose data to FaceModelMorph
+  3. FaceModelMorph uses `_compute_pose_aware_delta` (not Procrustes fallback) when processing output from FaceCropAlign
+  4. Morph attenuation triggers for high-yaw faces through the standard node chain
+  5. All existing tests continue to pass
+**Plans**: 1 plan
+
+Plans:
+- [ ] 12-01-PLAN.md — Fix pose key forwarding in FaceCropAlign + end-to-end integration test through full node chain
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
+Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -157,3 +174,4 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 9. Integration and Polish | v1.1 | 0/3 | Not started | - |
 | 10. Enable Pose Data Pipeline | v1.1 | Complete    | 2026-03-12 | 2026-03-12 |
 | 11. LoadFaceModel Node | 1/1 | Complete    | 2026-03-12 | - |
+| 12. Forward Pose Through FaceCropAlign | v1.1 | 0/1 | Not started | - |
