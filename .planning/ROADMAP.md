@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1-4 (shipped 2026-03-11)
-- 🚧 **v1.1 Versatile Model** — Phases 5-9 (in progress)
+- 🚧 **v1.1 Versatile Model** — Phases 5-11 (in progress)
 
 ## Phases
 
@@ -26,6 +26,8 @@
 - [x] **Phase 7: FaceModelBuilder Node** - User-facing node that processes a directory of images into an averaged canonical face model (completed 2026-03-11)
 - [x] **Phase 8: FaceModelMorph Node** - User-facing node that applies a face model to source images via pose-aware delta and TPS warp (completed 2026-03-12)
 - [ ] **Phase 9: Integration and Polish** - Edge case hardening, end-to-end pipeline validation, model preview visualization
+- [ ] **Phase 10: Enable Pose Data Pipeline** - Wire FaceDetect transformation matrix output so pose-aware morphing works at runtime (gap closure)
+- [ ] **Phase 11: LoadFaceModel Node** - User-facing node to reload saved .facemodel.npz files in new sessions (gap closure)
 
 ## Phase Details
 
@@ -106,10 +108,33 @@ Plans:
 - [ ] 09-02-PLAN.md — FaceModelMorph model validation with diagnostic warnings
 - [ ] 09-03-PLAN.md — E2E integration pipeline test (FaceModelBuilder -> FaceModelMorph -> FaceComposite)
 
+### Phase 10: Enable Pose Data Pipeline
+**Goal**: FaceDetect emits pose data so the pose-aware morphing pipeline works at runtime, not just in unit tests
+**Depends on**: Phase 8
+**Requirements**: POSE-04, MRPH-01
+**Gap Closure**: Closes gaps from v1.1 audit
+**Success Criteria** (what must be TRUE):
+  1. FaceDetect calls `get_landmarker()` with `output_facial_transformation_matrixes=True`
+  2. Face dicts produced by FaceDetect contain non-None pose data when a face is detected
+  3. FaceModelMorph receives pose data and uses `_compute_pose_aware_delta` instead of Procrustes fallback
+  4. Morph strength is visibly attenuated for high-yaw source faces in an integration test
+  5. All existing tests continue to pass
+
+### Phase 11: LoadFaceModel Node
+**Goal**: Users can reload saved .facemodel.npz files in new ComfyUI sessions, completing the model persistence round-trip
+**Depends on**: Phase 6
+**Requirements**: (integration gap closure)
+**Gap Closure**: Closes gaps from v1.1 audit
+**Success Criteria** (what must be TRUE):
+  1. LoadFaceModel node accepts a file path input and outputs a FACE_MODEL type
+  2. Loading a valid .facemodel.npz produces the same model data as the original save
+  3. Loading an invalid/missing file produces a clear user-facing error message
+  4. Node is registered in `__init__.py` and appears in ComfyUI node list
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -122,3 +147,5 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
 | 8. FaceModelMorph Node | 2/3 | Gap closure | 2026-03-12 | - |
 | 9. Integration and Polish | v1.1 | 0/3 | Not started | - |
+| 10. Enable Pose Data Pipeline | v1.1 | 0/0 | Not started | - |
+| 11. LoadFaceModel Node | v1.1 | 0/0 | Not started | - |

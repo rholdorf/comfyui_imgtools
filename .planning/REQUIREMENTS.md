@@ -12,7 +12,7 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 - [x] **POSE-01**: System can extract pitch/yaw/roll from MediaPipe's 4x4 transformation matrix
 - [x] **POSE-02**: System can frontalize 3D landmarks by de-rotating to canonical frontal pose
 - [x] **POSE-03**: System can normalize landmarks by inter-pupil distance for cross-image comparability
-- [x] **POSE-04**: FaceModelMorph auto-attenuates morph strength for source faces with high yaw
+- [ ] **POSE-04**: FaceModelMorph auto-attenuates morph strength for source faces with high yaw
 
 ### Model Building
 
@@ -24,7 +24,7 @@ Requirements for v1.1 Versatile Model milestone. Each maps to roadmap phases.
 
 ### Model Morphing
 
-- [x] **MRPH-01**: User can apply a face model to a source image via FaceModelMorph node using pose-aware delta and TPS warp
+- [ ] **MRPH-01**: User can apply a face model to a source image via FaceModelMorph node using pose-aware delta and TPS warp
 - [x] **MRPH-02**: FaceModelMorph passes head dimensions from model to FaceComposite for correct scaling
 - [x] **MRPH-03**: FaceModelMorph exposes a symmetrize toggle (default off) for the canonical model
 
@@ -66,13 +66,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | POSE-01 | Phase 5 | Complete |
 | POSE-02 | Phase 5 | Complete |
 | POSE-03 | Phase 5 | Complete |
-| POSE-04 | Phase 8 | Complete |
+| POSE-04 | Phase 10 | Pending |
 | MODL-01 | Phase 7 | Complete |
 | MODL-02 | Phase 7 | Complete |
 | MODL-03 | Phase 6 | Complete |
 | MODL-04 | Phase 7 | Complete |
 | MODL-05 | Phase 7 | Complete |
-| MRPH-01 | Phase 8 | Complete |
+| MRPH-01 | Phase 10 | Pending |
 | MRPH-02 | Phase 8 | Complete |
 | MRPH-03 | Phase 8 | Complete |
 | INTG-01 | Phase 9 | Complete |
@@ -85,4 +85,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-11 after roadmap creation*
+*Last updated: 2026-03-12 after gap closure phase creation*
