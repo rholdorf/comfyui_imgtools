@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import torch
 
 
 # ---------------------------------------------------------------------------
@@ -545,3 +546,113 @@ class TestNodeRegistration:
         """RETURN_TYPES includes FACE_MODEL, STRING, IMAGE."""
         from comfyui_imgtools.face_model_builder import FaceModelBuilder
         assert FaceModelBuilder.RETURN_TYPES == ("FACE_MODEL", "STRING", "IMAGE")
+
+
+# ---------------------------------------------------------------------------
+# TestBuildModelEdgeCases
+# ---------------------------------------------------------------------------
+
+class TestBuildModelEdgeCases:
+    """FaceModelBuilder.build_model() edge case error handling."""
+
+    @patch("comfyui_imgtools.face_model_builder.build_face_model")
+    def test_build_model_empty_dir(self, mock_build):
+        """Empty directory returns error in quality_report, empty model, black preview."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+
+        mock_build.side_effect = ValueError("No accepted images in '/empty'. All 0 images were rejected or had no face.")
+
+        node = FaceModelBuilder()
+        result = node.build_model(directory="/empty")
+
+        assert isinstance(result, tuple) and len(result) == 3
+        model_dict, quality_report, preview = result
+        assert model_dict == {}
+        assert "ERROR" in quality_report
+        assert preview.shape == (1, 512, 512, 3)
+        assert preview.dtype == torch.float32
+
+    @patch("comfyui_imgtools.face_model_builder.build_face_model")
+    def test_build_model_nonexistent_dir(self, mock_build):
+        """Nonexistent directory returns error in quality_report containing 'not found'."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+
+        mock_build.side_effect = ValueError("Directory not found: /nonexistent/path")
+
+        node = FaceModelBuilder()
+        result = node.build_model(directory="/nonexistent/path")
+
+        assert isinstance(result, tuple) and len(result) == 3
+        model_dict, quality_report, preview = result
+        assert model_dict == {}
+        assert "not found" in quality_report.lower()
+        assert preview.shape == (1, 512, 512, 3)
+
+    @patch("comfyui_imgtools.face_model_builder.build_face_model")
+    def test_build_model_all_rejected(self, mock_build):
+        """All images rejected returns error in quality_report, empty model."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+
+        mock_build.side_effect = ValueError("No accepted images in '/photos'. All 3 images were rejected or had no face.")
+
+        node = FaceModelBuilder()
+        result = node.build_model(directory="/photos")
+
+        assert isinstance(result, tuple) and len(result) == 3
+        model_dict, quality_report, preview = result
+        assert model_dict == {}
+        assert "ERROR" in quality_report
+
+    @patch("comfyui_imgtools.face_model_builder.build_face_model")
+    def test_build_model_no_face(self, mock_build):
+        """No face detected in any image returns error in quality_report."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+
+        mock_build.side_effect = ValueError("No accepted images in '/nofaces'. All 2 images were rejected or had no face.")
+
+        node = FaceModelBuilder()
+        result = node.build_model(directory="/nofaces")
+
+        assert isinstance(result, tuple) and len(result) == 3
+        model_dict, quality_report, preview = result
+        assert model_dict == {}
+        assert "ERROR" in quality_report
+
+    @patch("comfyui_imgtools.face_model_builder.build_face_model")
+    def test_build_model_single_image(self, mock_build):
+        """Single accepted image produces valid model with canonical_landmarks (478,2)."""
+        from comfyui_imgtools.face_model_builder import FaceModelBuilder
+
+        rng = np.random.default_rng(42)
+        canonical_2d = rng.random((478, 2)).astype(np.float64)
+        stddev = np.zeros((478, 3), dtype=np.float64)
+        control_indices = np.array([1, 2, 3], dtype=np.int64)
+
+        model_dict = {
+            "version": 2,
+            "canonical_landmarks": canonical_2d,
+            "head_dimensions": {"width": 1.8, "height": 2.3, "depth": 1.0},
+            "control_indices": control_indices,
+            "landmark_stddev": stddev,
+        }
+        results = [
+            {
+                "filename": "only.jpg",
+                "status": "ACCEPTED",
+                "yaw": 0.0,
+                "pitch": 0.0,
+                "roll": 0.0,
+                "confidence": 0.95,
+                "weight": 1.0,
+            }
+        ]
+        mock_build.return_value = (model_dict, results, "/tmp/model.npz")
+
+        node = FaceModelBuilder()
+        result = node.build_model(directory="/single")
+
+        assert isinstance(result, tuple) and len(result) == 3
+        out_model, report, preview = result
+        assert out_model["canonical_landmarks"].shape == (478, 2)
+        assert "ACCEPTED" in report
+        assert preview.shape == (1, 512, 512, 3)
