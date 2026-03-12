@@ -119,6 +119,10 @@ Plans:
   3. FaceModelMorph receives pose data and uses `_compute_pose_aware_delta` instead of Procrustes fallback
   4. Morph strength is visibly attenuated for high-yaw source faces in an integration test
   5. All existing tests continue to pass
+**Plans**: 1 plan
+
+Plans:
+- [ ] 10-01-PLAN.md — Enable transformation matrix in FaceDetect + integration tests for pose-aware morph path
 
 ### Phase 11: LoadFaceModel Node
 **Goal**: Users can reload saved .facemodel.npz files in new ComfyUI sessions, completing the model persistence round-trip
@@ -147,5 +151,5 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
 | 8. FaceModelMorph Node | 2/3 | Gap closure | 2026-03-12 | - |
 | 9. Integration and Polish | v1.1 | 0/3 | Not started | - |
-| 10. Enable Pose Data Pipeline | v1.1 | 0/0 | Not started | - |
+| 10. Enable Pose Data Pipeline | v1.1 | 0/1 | Not started | - |
 | 11. LoadFaceModel Node | v1.1 | 0/0 | Not started | - |
