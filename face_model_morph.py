@@ -119,6 +119,22 @@ class FaceModelMorph:
         """
         h, w = source_image.shape[1], source_image.shape[2]
 
+        # Validate face_model
+        if not face_model or not isinstance(face_model, dict):
+            print("[FaceModelMorph] Warning: empty or invalid face_model, returning passthrough")
+            return self._passthrough(source_image, h, w, source_align_data)
+
+        required_keys = ("canonical_landmarks", "head_dimensions")
+        missing = [k for k in required_keys if k not in face_model]
+        if missing:
+            print(f"[FaceModelMorph] Warning: face_model missing keys: {missing}, returning passthrough")
+            return self._passthrough(source_image, h, w, source_align_data)
+
+        if face_model["canonical_landmarks"].shape != (478, 2):
+            print(f"[FaceModelMorph] Warning: canonical_landmarks shape mismatch: "
+                  f"expected (478, 2), got {face_model['canonical_landmarks'].shape}, returning passthrough")
+            return self._passthrough(source_image, h, w, source_align_data)
+
         try:
             # 1. Validate landmarks
             if (not source_landmarks or len(source_landmarks) == 0):
@@ -214,7 +230,8 @@ class FaceModelMorph:
 
             return (morphed_tensor, mask_tensor, out_align_data)
 
-        except Exception:
+        except Exception as e:
+            print(f"[FaceModelMorph] Warning: morph failed: {e}")
             return self._passthrough(source_image, h, w, source_align_data)
 
     def _compute_pose_aware_delta(
