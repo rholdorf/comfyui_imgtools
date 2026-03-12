@@ -242,3 +242,95 @@ class TestFeatheredRectMask:
     def test_zero_feather(self):
         mask = FaceComposite._make_feathered_rect_mask(10, 10, 0)
         assert np.all(mask == 1.0)
+
+
+class TestHeadScaleResize:
+    """Verify head_scale from align_data controls morphed_face resize before compositing."""
+
+    def _make_align_data(self, head_scale=None):
+        """Create align_data with optional head_scale key."""
+        from skimage.transform import AffineTransform
+
+        data = {
+            "rotation_angle": 0.0,
+            "rotation_center": (50.0, 50.0),
+            "crop_box": (10, 10, 74, 74),
+            "original_size": (100, 100),
+            "transform_matrix": AffineTransform().params.copy(),
+        }
+        if head_scale is not None:
+            data["head_scale"] = head_scale
+        return data
+
+    def _composite(self, head_scale=None):
+        """Run composite with a given head_scale and return (result_img, result_mask)."""
+        node = FaceComposite()
+        original = torch.rand(1, 100, 100, 3, dtype=torch.float32)
+        morphed = torch.full((1, 64, 64, 3), 0.8, dtype=torch.float32)
+        align = self._make_align_data(head_scale=head_scale)
+        return node.composite(original, morphed, align)
+
+    def _mask_nonzero_count(self, mask):
+        """Count nonzero pixels in mask tensor."""
+        return (mask > 0).sum().item()
+
+    def test_head_scale_absent_matches_default(self):
+        """No head_scale key in align_data produces same output as head_scale=1.0."""
+        node = FaceComposite()
+        torch.manual_seed(42)
+        original = torch.rand(1, 100, 100, 3, dtype=torch.float32)
+        morphed = torch.full((1, 64, 64, 3), 0.8, dtype=torch.float32)
+
+        align_no_key = self._make_align_data(head_scale=None)
+        align_one = self._make_align_data(head_scale=1.0)
+
+        result_no, mask_no = node.composite(original, morphed, align_no_key)
+        result_one, mask_one = node.composite(original, morphed, align_one)
+
+        np.testing.assert_allclose(
+            result_no[0].numpy(), result_one[0].numpy(), atol=1e-6,
+            err_msg="head_scale absent should match head_scale=1.0",
+        )
+        np.testing.assert_allclose(
+            mask_no[0].numpy(), mask_one[0].numpy(), atol=1e-6,
+            err_msg="mask with absent head_scale should match head_scale=1.0",
+        )
+
+    def test_head_scale_one_no_resize(self):
+        """head_scale=1.0 produces same result as baseline (no head_scale)."""
+        node = FaceComposite()
+        torch.manual_seed(99)
+        original = torch.rand(1, 100, 100, 3, dtype=torch.float32)
+        morphed = torch.full((1, 64, 64, 3), 0.8, dtype=torch.float32)
+
+        align_baseline = self._make_align_data(head_scale=None)
+        align_one = self._make_align_data(head_scale=1.0)
+
+        _, mask_baseline = node.composite(original, morphed, align_baseline)
+        _, mask_one = node.composite(original, morphed, align_one)
+
+        assert self._mask_nonzero_count(mask_baseline) == self._mask_nonzero_count(mask_one)
+
+    def test_head_scale_larger_expands_face(self):
+        """head_scale=1.3 produces a mask with MORE nonzero pixels than head_scale=1.0."""
+        _, mask_one = self._composite(head_scale=1.0)
+        _, mask_large = self._composite(head_scale=1.3)
+
+        count_one = self._mask_nonzero_count(mask_one)
+        count_large = self._mask_nonzero_count(mask_large)
+        assert count_large > count_one, (
+            f"head_scale=1.3 mask area ({count_large}) should exceed "
+            f"head_scale=1.0 mask area ({count_one})"
+        )
+
+    def test_head_scale_smaller_shrinks_face(self):
+        """head_scale=0.7 produces a mask with FEWER nonzero pixels than head_scale=1.0."""
+        _, mask_one = self._composite(head_scale=1.0)
+        _, mask_small = self._composite(head_scale=0.7)
+
+        count_one = self._mask_nonzero_count(mask_one)
+        count_small = self._mask_nonzero_count(mask_small)
+        assert count_small < count_one, (
+            f"head_scale=0.7 mask area ({count_small}) should be less than "
+            f"head_scale=1.0 mask area ({count_one})"
+        )
