@@ -99,10 +99,11 @@ Plans:
   2. FaceModelMorph handles malformed or incompatible model files with clear error messages
   3. Full pipeline (directory -> FaceModelBuilder -> FaceModelMorph -> FaceComposite) produces correct output end-to-end
   4. All v1.0 tests (123) continue to pass, confirming zero regression from v1.1 changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md — FaceModelBuilder edge case hardening with try/except error handling
+- [ ] 09-02-PLAN.md — FaceModelMorph model validation with diagnostic warnings
 
 ## Progress
 
@@ -119,4 +120,4 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8 -> 9
 | 6. Model Persistence | v1.1 | 1/1 | Complete | 2026-03-11 |
 | 7. FaceModelBuilder Node | 2/2 | Complete   | 2026-03-11 | - |
 | 8. FaceModelMorph Node | 2/3 | Gap closure | 2026-03-12 | - |
-| 9. Integration and Polish | v1.1 | 0/? | Not started | - |
+| 9. Integration and Polish | v1.1 | 0/2 | Not started | - |
