@@ -9,7 +9,7 @@ Clone or copy this folder into your ComfyUI `custom_nodes` directory:
 ```
 ComfyUI/
   custom_nodes/
-    comfyui_imgtools/
+    comfyui_rholdorf/
       __init__.py
       nodes.py
 ```
