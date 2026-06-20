@@ -20,7 +20,7 @@ class RandomLineConcatenator:
                 "end": ("STRING", {"default": "", "multiline": False}),
             },
             "optional": {
-                "input": ("STRING", {"forceInput": True}),
+                "text_in": ("STRING", {"default": "", "forceInput": True}),
             },
         }
 
@@ -29,8 +29,8 @@ class RandomLineConcatenator:
     FUNCTION = "concatenate"
     CATEGORY = "rholdorf/text"
 
-    def concatenate(self, seed, adjust_whitespace, start="", random_choice="", end="", input=""):
-        input = input or ""
+    def concatenate(self, seed, adjust_whitespace, start="", random_choice="", end="", text_in=""):
+        text_in = text_in or ""
         start = start or ""
         random_choice = random_choice or ""
         end = end or ""
@@ -39,9 +39,9 @@ class RandomLineConcatenator:
         chosen = random.Random(seed).choice(lines) if lines else ""
 
         if adjust_whitespace:
-            parts = [p for p in (_collapse(input), _collapse(start), _collapse(chosen), _collapse(end)) if p]
+            parts = [p for p in (_collapse(text_in), _collapse(start), _collapse(chosen), _collapse(end)) if p]
             result = " ".join(parts)
         else:
-            result = f"{input}{start}{chosen}{end}"
+            result = f"{text_in}{start}{chosen}{end}"
 
         return (result,)
