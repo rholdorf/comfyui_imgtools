@@ -13,14 +13,42 @@ class RandomLineConcatenator:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
-                "adjust_whitespace": ("BOOLEAN", {"default": True}),
-                "start": ("STRING", {"default": "", "multiline": False}),
-                "random_choice": ("STRING", {"default": "", "multiline": True}),
-                "end": ("STRING", {"default": "", "multiline": False}),
+                "seed": ("INT", {
+                    "default": 0,
+                    "min": 0,
+                    "max": 0xFFFFFFFFFFFFFFFF,
+                    "control_after_generate": True,
+                    "tooltip": "Seed for picking a line from random_choice.",
+                }),
+                "adjust_whitespace": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": "Collapse runs of whitespace and join parts with a single space.",
+                }),
+                "start": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "dynamicPrompts": False,
+                    "tooltip": "Text prepended before the random line.",
+                }),
+                "random_choice": ("STRING", {
+                    "default": "",
+                    "multiline": True,
+                    "dynamicPrompts": False,
+                    "tooltip": "One option per line; a single non-empty line is picked using seed.",
+                }),
+                "end": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "dynamicPrompts": False,
+                    "tooltip": "Text appended after the random line.",
+                }),
             },
             "optional": {
-                "text_in": ("STRING", {"default": "", "forceInput": True}),
+                "text_in": ("STRING", {
+                    "default": "",
+                    "forceInput": True,
+                    "tooltip": "Optional upstream string; prepended before start/chosen/end.",
+                }),
             },
         }
 
@@ -28,6 +56,7 @@ class RandomLineConcatenator:
     RETURN_NAMES = ("text",)
     FUNCTION = "concatenate"
     CATEGORY = "rholdorf/text"
+    DESCRIPTION = "Pick one line at random from a multi-line list and concatenate it between optional prefix/suffix strings."
 
     def concatenate(self, seed, adjust_whitespace, start="", random_choice="", end="", text_in=""):
         text_in = text_in or ""
@@ -40,8 +69,5 @@ class RandomLineConcatenator:
 
         if adjust_whitespace:
             parts = [p for p in (_collapse(text_in), _collapse(start), _collapse(chosen), _collapse(end)) if p]
-            result = " ".join(parts)
-        else:
-            result = f"{text_in}{start}{chosen}{end}"
-
-        return (result,)
+            return (" ".join(parts),)
+        return (f"{text_in}{start}{chosen}{end}",)
