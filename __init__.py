@@ -2,6 +2,8 @@ from .nodes import ImageDimensionFitter, ImagePaddingCalculator, PathSplitter
 from .save_nodes import SaveImageWithCaption
 from .text_nodes import RandomLineConcatenator
 
+WEB_DIRECTORY = "./web"
+
 NODE_CLASS_MAPPINGS = {
     "ImageDimensionFitter": ImageDimensionFitter,
     "ImagePaddingCalculator": ImagePaddingCalculator,
@@ -18,4 +20,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SaveImageWithCaption": "Save Image with Caption (rholdorf)",
 }
 
-__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']

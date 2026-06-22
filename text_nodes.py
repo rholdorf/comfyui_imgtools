@@ -1,3 +1,4 @@
+import json
 import random
 import re
 
@@ -6,6 +7,39 @@ _WS_RE = re.compile(r"\s+")
 
 def _collapse(text: str) -> str:
     return _WS_RE.sub(" ", text).strip()
+
+
+def _parse_options(raw: str) -> list[dict]:
+    """Parse the random_choice widget value.
+
+    Accepts the new JSON format (list of {enabled, text} dicts produced by the
+    frontend editor) and the legacy newline-separated format. Returns a list
+    of normalized {enabled, text} dicts.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return []
+    if raw.startswith("["):
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            data = None
+        if isinstance(data, list):
+            normalized = []
+            for entry in data:
+                if not isinstance(entry, dict):
+                    continue
+                normalized.append({
+                    "enabled": entry.get("enabled", True) is not False,
+                    "text": str(entry.get("text", "")),
+                })
+            return normalized
+    # Legacy fallback: one entry per non-empty line, all enabled.
+    return [
+        {"enabled": True, "text": line.strip()}
+        for line in raw.splitlines()
+        if line.strip()
+    ]
 
 
 class RandomLineConcatenator:
@@ -31,10 +65,10 @@ class RandomLineConcatenator:
                     "tooltip": "Text prepended before the random line.",
                 }),
                 "random_choice": ("STRING", {
-                    "default": "",
-                    "multiline": True,
+                    "default": "[]",
+                    "multiline": False,
                     "dynamicPrompts": False,
-                    "tooltip": "One option per line; a single non-empty line is picked using seed.",
+                    "tooltip": "Options pool. Edit via the toggleable rows in the node UI.",
                 }),
                 "end": ("STRING", {
                     "default": "",
@@ -56,16 +90,16 @@ class RandomLineConcatenator:
     RETURN_NAMES = ("text",)
     FUNCTION = "concatenate"
     CATEGORY = "rholdorf/text"
-    DESCRIPTION = "Pick one line at random from a multi-line list and concatenate it between optional prefix/suffix strings."
+    DESCRIPTION = "Pick one line at random from a toggle-able list and concatenate it between optional prefix/suffix strings."
 
-    def concatenate(self, seed, adjust_whitespace, start="", random_choice="", end="", text_in=""):
+    def concatenate(self, seed, adjust_whitespace, start="", random_choice="[]", end="", text_in=""):
         text_in = text_in or ""
         start = start or ""
-        random_choice = random_choice or ""
         end = end or ""
 
-        lines = [l for l in random_choice.splitlines() if l.strip()]
-        chosen = random.Random(seed).choice(lines) if lines else ""
+        entries = _parse_options(random_choice)
+        candidates = [e["text"] for e in entries if e["enabled"] and e["text"].strip()]
+        chosen = random.Random(seed).choice(candidates) if candidates else ""
 
         if adjust_whitespace:
             parts = [p for p in (_collapse(text_in), _collapse(start), _collapse(chosen), _collapse(end)) if p]
