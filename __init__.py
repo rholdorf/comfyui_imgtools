@@ -1,3 +1,4 @@
+from .loader_nodes import LoadImagesWithCaptionsFromDir
 from .nodes import ImageDimensionFitter, ImagePaddingCalculator, PathSplitter
 from .save_nodes import SaveImageWithCaption
 from .text_nodes import RandomLineConcatenator
@@ -7,6 +8,7 @@ WEB_DIRECTORY = "./web"
 NODE_CLASS_MAPPINGS = {
     "ImageDimensionFitter": ImageDimensionFitter,
     "ImagePaddingCalculator": ImagePaddingCalculator,
+    "LoadImagesWithCaptionsFromDir": LoadImagesWithCaptionsFromDir,
     "PathSplitter": PathSplitter,
     "RandomLineConcatenator": RandomLineConcatenator,
     "SaveImageWithCaption": SaveImageWithCaption,
@@ -15,6 +17,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ImageDimensionFitter": "Image Dimension Fitter (rholdorf)",
     "ImagePaddingCalculator": "Image Padding Calculator (rholdorf)",
+    "LoadImagesWithCaptionsFromDir": "Load Images with Captions from Dir (rholdorf)",
     "PathSplitter": "Path Splitter (rholdorf)",
     "RandomLineConcatenator": "Random Line Concatenator (rholdorf)",
     "SaveImageWithCaption": "Save Image with Caption (rholdorf)",
