@@ -13,10 +13,10 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ImageDimensionFitter": "Image Dimension Fitter",
-    "ImagePaddingCalculator": "Image Padding Calculator",
-    "PathSplitter": "Path Splitter",
-    "RandomLineConcatenator": "rholdorf Random Line Concatenator",
+    "ImageDimensionFitter": "Image Dimension Fitter (rholdorf)",
+    "ImagePaddingCalculator": "Image Padding Calculator (rholdorf)",
+    "PathSplitter": "Path Splitter (rholdorf)",
+    "RandomLineConcatenator": "Random Line Concatenator (rholdorf)",
     "SaveImageWithCaption": "Save Image with Caption (rholdorf)",
 }
 

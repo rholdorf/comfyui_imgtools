@@ -102,7 +102,7 @@ class ImagePaddingCalculator:
     RETURN_TYPES = ("INT", "INT", "INT", "INT")
     RETURN_NAMES = ("left", "top", "right", "bottom")
     FUNCTION = "calculate_padding"
-    CATEGORY = "image/transform"
+    CATEGORY = "rholdorf/image"
 
     def calculate_padding(self, image, target_width, target_height):
         _, h, w, _ = image.shape
@@ -127,7 +127,7 @@ class PathSplitter:
     RETURN_TYPES = ("STRING", "STRING", "STRING")
     RETURN_NAMES = ("directory", "filename", "stem")
     FUNCTION = "split_path"
-    CATEGORY = "utils"
+    CATEGORY = "rholdorf/utils"
 
     def split_path(self, path):
         import os
@@ -150,7 +150,7 @@ class ImageDimensionFitter:
     RETURN_TYPES = ("IMAGE", "INT", "INT")
     RETURN_NAMES = ("image", "target_width", "target_height")
     FUNCTION = "fit_dimensions"
-    CATEGORY = "image/transform"
+    CATEGORY = "rholdorf/image"
 
     def fit_dimensions(self, image, model):
         # image tensor shape: [batch, height, width, channels]
