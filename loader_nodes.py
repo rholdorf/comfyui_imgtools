@@ -1,9 +1,12 @@
+import hashlib
 import os
 import re
 
 import numpy as np
 import torch
 from PIL import Image, ImageOps
+
+import folder_paths
 
 
 _SORT_METHODS = [
@@ -139,3 +142,65 @@ class LoadImagesWithCaptionsFromDir:
             file_paths.append(image_path)
 
         return (images, masks, captions, file_paths)
+
+
+class LoadImageWithCaption:
+    @classmethod
+    def INPUT_TYPES(cls):
+        input_dir = folder_paths.get_input_directory()
+        files = [
+            f for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f))
+        ]
+        files = folder_paths.filter_files_content_types(files, ["image"])
+        return {
+            "required": {
+                "image": (sorted(files), {"image_upload": True}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK", "STRING")
+    RETURN_NAMES = ("image", "mask", "caption")
+    FUNCTION = "load"
+    CATEGORY = "rholdorf/image"
+    DESCRIPTION = (
+        "Load a single image (like the built-in Load Image node) and also "
+        "return its sidecar UTF-8 .txt caption (same base name) when present. "
+        "Use the 'upload pair (.png + .txt)' button to upload both files at "
+        "once — multi-select them in the file dialog (Cmd/Ctrl+click). "
+        "Returns an empty caption string when no matching .txt is found."
+    )
+
+    def load(self, image):
+        image_path = folder_paths.get_annotated_filepath(image)
+
+        pil = Image.open(image_path)
+        pil = ImageOps.exif_transpose(pil)
+        rgb = np.array(pil.convert("RGB")).astype(np.float32) / 255.0
+        image_tensor = torch.from_numpy(rgb)[None,]
+
+        if "A" in pil.getbands():
+            alpha = np.array(pil.getchannel("A")).astype(np.float32) / 255.0
+            mask_tensor = (1.0 - torch.from_numpy(alpha)).unsqueeze(0)
+        else:
+            mask_tensor = torch.zeros((1, 64, 64), dtype=torch.float32)
+
+        return (image_tensor, mask_tensor, _read_caption(image_path))
+
+    @classmethod
+    def IS_CHANGED(cls, image):
+        image_path = folder_paths.get_annotated_filepath(image)
+        m = hashlib.sha256()
+        with open(image_path, "rb") as f:
+            m.update(f.read())
+        txt_path = os.path.splitext(image_path)[0] + ".txt"
+        if os.path.isfile(txt_path):
+            with open(txt_path, "rb") as f:
+                m.update(f.read())
+        return m.digest().hex()
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, image):
+        if not folder_paths.exists_annotated_filepath(image):
+            return f"Invalid image file: {image}"
+        return True
