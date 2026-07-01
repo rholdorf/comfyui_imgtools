@@ -38,54 +38,42 @@ ZTURBO_DIMENSIONS = [
     (640, 1536),   # 5:12
 ]
 
+# Krea 2: ~1MP, divisible by 32. Krea does not publish exact pixel dimensions;
+# these are computed from the documented aspect ratios (1:1, 4:3, 3:2, 16:9, 4:5
+# and their portrait counterparts) targeting 1024x1024 total pixels, with each
+# side floored to the nearest multiple of 32 so we never upscale past the target.
+KREA2_DIMENSIONS = [
+    (1024, 1024),  # 1:1
+    (1152, 864),   # 4:3   (ratio 1.333 exact)
+    (864, 1152),   # 3:4
+    (1248, 832),   # 3:2   (ratio 1.5 exact)
+    (832, 1248),   # 2:3
+    (1344, 768),   # 16:9  (ratio 1.75)
+    (768, 1344),   # 9:16
+    (1120, 896),   # 5:4   (ratio 1.25 exact)
+    (896, 1120),   # 4:5
+]
+
 MODEL_DIMENSIONS = {
     "SD": SD_DIMENSIONS,
     "Flux": FLUX_DIMENSIONS,
     "Z-Turbo": ZTURBO_DIMENSIONS,
+    "Krea 2": KREA2_DIMENSIONS,
 }
 
 
-def center_crop(image, target_w: int, target_h: int):
-    """Center crop an image tensor to target dimensions.
-
-    Args:
-        image: Tensor of shape [batch, height, width, channels]
-        target_w: Target width
-        target_h: Target height
-
-    Returns:
-        Cropped tensor of shape [batch, target_h, target_w, channels]
-    """
-    _, h, w, _ = image.shape
-
-    # If image is smaller than target in either dimension, return as-is
-    if w < target_w or h < target_h:
-        return image
-
-    # Calculate crop offsets to center the crop region
-    x_offset = (w - target_w) // 2
-    y_offset = (h - target_h) // 2
-
-    # Crop: [batch, y:y+h, x:x+w, channels]
-    return image[:, y_offset:y_offset + target_h, x_offset:x_offset + target_w, :]
-
-
 def find_closest_dimensions(width: int, height: int, model: str) -> tuple[int, int]:
-    """Find the closest standard dimensions for the given model based on aspect ratio."""
+    """Find the closest standard dimensions for the given model based on aspect ratio.
+
+    Ties in ratio-distance resolve to the smaller total-pixel candidate so we
+    never upscale past what's needed.
+    """
     dimensions = MODEL_DIMENSIONS[model]
     input_ratio = width / height
-
-    best_match = dimensions[0]
-    best_diff = abs(input_ratio - (best_match[0] / best_match[1]))
-
-    for w, h in dimensions[1:]:
-        target_ratio = w / h
-        diff = abs(input_ratio - target_ratio)
-        if diff < best_diff:
-            best_diff = diff
-            best_match = (w, h)
-
-    return best_match
+    return min(
+        dimensions,
+        key=lambda d: (abs(input_ratio - d[0] / d[1]), d[0] * d[1]),
+    )
 
 
 class ImagePaddingCalculator:
@@ -142,22 +130,23 @@ class ImageDimensionFitter:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
-                "model": (["SD", "Flux", "Z-Turbo"],),
-            }
+                "width": ("INT", {
+                    "default": 1024, "min": 1, "max": 16384, "step": 1,
+                    "tooltip": "Reference width — used to detect the closest model resolution.",
+                }),
+                "height": ("INT", {
+                    "default": 1024, "min": 1, "max": 16384, "step": 1,
+                    "tooltip": "Reference height — used to detect the closest model resolution.",
+                }),
+                "model": (["SD", "Flux", "Z-Turbo", "Krea 2"],),
+            },
         }
 
-    RETURN_TYPES = ("IMAGE", "INT", "INT")
-    RETURN_NAMES = ("image", "target_width", "target_height")
+    RETURN_TYPES = ("INT", "INT")
+    RETURN_NAMES = ("target_width", "target_height")
     FUNCTION = "fit_dimensions"
     CATEGORY = "rholdorf/image"
 
-    def fit_dimensions(self, image, model):
-        # image tensor shape: [batch, height, width, channels]
-        _, h, w, _ = image.shape
-        target_w, target_h = find_closest_dimensions(w, h, model)
-
-        # Center crop to target dimensions (handles batch automatically)
-        cropped = center_crop(image, target_w, target_h)
-
-        return (cropped, target_w, target_h)
+    def fit_dimensions(self, width, height, model):
+        target_w, target_h = find_closest_dimensions(width, height, model)
+        return (target_w, target_h)
