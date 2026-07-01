@@ -1,6 +1,7 @@
 from .loader_nodes import LoadImagesWithCaptionsFromDir, LoadImageWithCaption
 from .nodes import ImageDimensionFitter, ImagePaddingCalculator, PathSplitter
 from .resize_nodes import ImageResizeLanczos3NonSeparable
+from .resolution_nodes import ResolutionSelectorFromDimensions
 from .save_nodes import SaveImageWithCaption
 from .text_nodes import RandomLineConcatenator
 
@@ -14,6 +15,7 @@ NODE_CLASS_MAPPINGS = {
     "LoadImagesWithCaptionsFromDir": LoadImagesWithCaptionsFromDir,
     "PathSplitter": PathSplitter,
     "RandomLineConcatenator": RandomLineConcatenator,
+    "ResolutionSelectorFromDimensions": ResolutionSelectorFromDimensions,
     "SaveImageWithCaption": SaveImageWithCaption,
 }
 
@@ -25,6 +27,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagesWithCaptionsFromDir": "Load Images with Captions from Dir (rholdorf)",
     "PathSplitter": "Path Splitter (rholdorf)",
     "RandomLineConcatenator": "Random Line Concatenator (rholdorf)",
+    "ResolutionSelectorFromDimensions": "Resolution Selector from Dimensions (rholdorf)",
     "SaveImageWithCaption": "Save Image with Caption (rholdorf)",
 }
 
